@@ -1,12 +1,12 @@
 provider "google" {
   project                     = var.project_id
   region                      = var.default_region
-  impersonate_service_account = var.impersonate_sa_email
+  impersonate_service_account = "${var.deployer_sa_name}@${var.project_id}.iam.gserviceaccount.com"
 }
 
 provider "google-beta" {
   alias                       = "beta"
   project                     = var.project_id
   region                      = var.default_region
-  impersonate_service_account = var.impersonate_sa_email
+  impersonate_service_account = "${var.deployer_sa_name}@${var.project_id}.iam.gserviceaccount.com"
 }

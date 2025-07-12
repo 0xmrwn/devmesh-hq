@@ -37,7 +37,7 @@ variable "us_zone" {
   default     = "us-east1-b"
 }
 
-variable "impersonate_sa_email" {
+variable "deployer_sa_name" {
   type        = string
   description = "Email of the service account to impersonate"
 }
