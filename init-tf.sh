@@ -107,7 +107,8 @@ for ROLE in \
   roles/iam.serviceAccountTokenCreator \
   roles/compute.admin \
   roles/secretmanager.admin \
-  roles/storage.admin
+  roles/storage.admin \
+  roles/resourcemanager.projectIamAdmin
 do
   # Check if the binding already exists
   if ! gcloud projects get-iam-policy "${PROJECT_ID}" \
