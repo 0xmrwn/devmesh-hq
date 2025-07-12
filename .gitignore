@@ -3,6 +3,8 @@
 .env.local
 .env.*.local
 
+# Tailscale
+tailscale-acl.json
 
 # Local .terraform directories
 .terraform/
