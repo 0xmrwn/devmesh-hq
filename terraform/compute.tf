@@ -13,24 +13,14 @@ data "google_compute_image" "debian_12" {
   filter  = "name = ${var.debian_12_version}"
 }
 
-resource "google_compute_instance" "bastion_hub" {
-  name                = "bastion-hub"
+resource "google_compute_instance" "bastion" {
+  name                = "${var.base_name}-bastion"
   zone                = var.us_zone
   machine_type        = var.bastion_machine_type
-  deletion_protection = true
+  deletion_protection = false # TODO: enable deletion protection
 
   boot_disk {
-    auto_delete = true
-    device_name = "persistent-disk-0"
-
-    initialize_params {
-      image = google_compute_disk.bastion_hub.image
-      size  = google_compute_disk.bastion_hub.size
-      type  = google_compute_disk.bastion_hub.type
-    }
-
-    mode   = "READ_WRITE"
-    source = google_compute_disk.bastion_hub.self_link
+    source = google_compute_disk.bastion.self_link
   }
 
   metadata = {
@@ -42,12 +32,6 @@ resource "google_compute_instance" "bastion_hub" {
     stack_type         = data.google_compute_subnetwork.default_us.stack_type
     subnetwork         = data.google_compute_subnetwork.default_us.self_link
     subnetwork_project = data.google_compute_subnetwork.default_us.project
-  }
-
-  scheduling {
-    automatic_restart   = true
-    on_host_maintenance = "MIGRATE"
-    provisioning_model  = "STANDARD"
   }
 
   service_account {
@@ -63,24 +47,14 @@ resource "google_compute_instance" "bastion_hub" {
 
 }
 
-resource "google_compute_instance" "devmesh_code" {
+resource "google_compute_instance" "code" {
   name         = "${var.base_name}-code"
   zone         = var.default_zone
   machine_type = var.code_machine_type
   tags         = ["allow-tailscale-udp"]
 
   boot_disk {
-    auto_delete = true
-    device_name = "persistent-disk-0"
-
-    initialize_params {
-      image = google_compute_disk.devmesh_code.image
-      size  = google_compute_disk.devmesh_code.size
-      type  = google_compute_disk.devmesh_code.type
-    }
-
-    mode   = "READ_WRITE"
-    source = google_compute_disk.devmesh_code.self_link
+    source = google_compute_disk.code.self_link
   }
 
   labels = {
@@ -99,12 +73,6 @@ resource "google_compute_instance" "devmesh_code" {
     subnetwork_project = data.google_compute_subnetwork.default_esw1.project
   }
 
-  scheduling {
-    automatic_restart   = true
-    on_host_maintenance = "MIGRATE"
-    provisioning_model  = "STANDARD"
-  }
-
   service_account {
     email  = google_service_account.devmesh_hub_sa.email
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
@@ -118,28 +86,18 @@ resource "google_compute_instance" "devmesh_code" {
 
 }
 
-resource "google_compute_instance" "devmesh_desktop" {
-  name         = "${var.base_name}-desktop"
+resource "google_compute_instance" "workstation" {
+  name         = "${var.base_name}-workstation"
   zone         = var.default_zone
-  machine_type = var.desktop_machine_type
+  machine_type = var.workstation_machine_type
   tags         = ["allow-tailscale-udp"]
 
   boot_disk {
-    auto_delete = true
-    device_name = "persistent-disk-0"
-
-    initialize_params {
-      image = google_compute_disk.devmesh_desktop.image
-      size  = google_compute_disk.devmesh_desktop.size
-      type  = google_compute_disk.devmesh_desktop.type
-    }
-
-    mode   = "READ_WRITE"
-    source = google_compute_disk.devmesh_desktop.self_link
+    source = google_compute_disk.workstation.self_link
   }
 
   metadata = {
-    startup-script = local.desktop_startup_script
+    startup-script = local.workstation_startup_script
   }
 
   network_interface {
@@ -147,12 +105,6 @@ resource "google_compute_instance" "devmesh_desktop" {
     stack_type         = data.google_compute_subnetwork.default_esw1.stack_type
     subnetwork         = data.google_compute_subnetwork.default_esw1.self_link
     subnetwork_project = data.google_compute_subnetwork.default_esw1.project
-  }
-
-  scheduling {
-    automatic_restart   = true
-    on_host_maintenance = "MIGRATE"
-    provisioning_model  = "STANDARD"
   }
 
   service_account {

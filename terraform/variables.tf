@@ -58,9 +58,9 @@ variable "code_machine_type" {
   default     = "e2-medium"
 }
 
-variable "desktop_machine_type" {
+variable "workstation_machine_type" {
   type        = string
-  description = "Machine type for the desktop instance"
+  description = "Machine type for the workstation instance"
   default     = "e2-standard-2"
 }
 
@@ -92,7 +92,7 @@ variable "default_disk_types" {
   default     = {
     bastion = "pd-standard"
     code    = "pd-balanced"
-    desktop = "pd-balanced"
+    workstation = "pd-balanced"
   }
 }
 
@@ -114,9 +114,9 @@ variable "code_disk_size" {
   default     = 50
 }
 
-variable "desktop_disk_size" {
+variable "workstation_disk_size" {
   type        = number
-  description = "Size for the desktop disk"
+  description = "Size for the workstation disk"
   default     = 50
 }
 

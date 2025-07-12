@@ -1,5 +1,5 @@
-resource "google_compute_disk" "bastion_hub" {
-  name                      = "bastion-hub"
+resource "google_compute_disk" "bastion" {
+  name                      = "${var.base_name}-bastion"
   zone                      = var.us_zone
   image                     = data.google_compute_image.ubuntu_2204.self_link
   licenses                  = data.google_compute_image.ubuntu_2204.licenses
@@ -44,7 +44,7 @@ resource "google_compute_disk" "bastion_hub" {
 
 }
 
-resource "google_compute_disk" "devmesh_code" {
+resource "google_compute_disk" "code" {
   name                      = "${var.base_name}-code"
   zone                      = var.default_zone
   image                     = data.google_compute_image.debian_11.self_link
@@ -67,14 +67,14 @@ resource "google_compute_disk" "devmesh_code" {
 
 }
 
-resource "google_compute_disk" "devmesh_desktop" {
-  name                      = "${var.base_name}-desktop"
+resource "google_compute_disk" "workstation" {
+  name                      = "${var.base_name}-workstation"
   zone                      = var.default_zone
   image                     = data.google_compute_image.debian_12.self_link
   licenses                  = data.google_compute_image.debian_12.licenses
   physical_block_size_bytes = var.default_block_size_bytes
-  size                      = var.desktop_disk_size
-  type                      = var.default_disk_types["desktop"]
+  size                      = var.workstation_disk_size
+  type                      = var.default_disk_types["workstation"]
 
   guest_os_features {
     type = "GVNIC"
