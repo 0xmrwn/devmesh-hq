@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Install Tailscale
-curl -fsSL https://tailscale.com/install.sh | sh
+# DevMesh Bastion startup script
+# Uses common functions for standardized setup
 
-# Fetch auth-key (base64-decoded) from Secret Manager
-AUTH_KEY=$(gcloud secrets versions access latest \
-           --secret=TAILSCALE_AUTHKEY \
-           --format='get(payload.data)' | base64 -d)
+# Configuration
+TAILSCALE_HOSTNAME="devmesh-bastion"
+TAILSCALE_TAGS="tag:bastion"
 
-# Bring the node into the tailnet, enable identity-based SSH
-tailscale up --auth-key="${AUTH_KEY}" \
-             --ssh \
-             --hostname=bastion-hub
+# Create standard devmesh user
+create_devmesh_user
+
+# Setup Tailscale connection
+setup_tailscale "$TAILSCALE_HOSTNAME" "$TAILSCALE_TAGS"
+
+log_info "Bastion setup complete!"
