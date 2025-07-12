@@ -17,7 +17,7 @@ resource "google_compute_instance" "bastion" {
   name                = "${var.base_name}-bastion"
   zone                = var.us_zone
   machine_type        = var.bastion_machine_type
-  deletion_protection = false # TODO: enable deletion protection
+  deletion_protection = true
 
   boot_disk {
     source = google_compute_disk.bastion.self_link
