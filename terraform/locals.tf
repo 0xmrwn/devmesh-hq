@@ -8,5 +8,5 @@ locals {
   workstation_startup_script = "${local.common_functions}\n${file("${path.module}/scripts/workstation-startup.sh")}"
 
   # Load Tailscale ACL
-  tailscale_acl = file("${path.module}/../rules/tailscale-acl.json")
+  tailscale_acl = file("${path.module}/../rules/tailscale-acl.jsonc")
 }

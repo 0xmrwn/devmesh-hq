@@ -1,0 +1,166 @@
+{
+  // Define user groups - admins can manage the entire tailnet
+  "groups": {
+    "group:admins": [
+      "your-tailscale-user@example.com" // Add your tailscale user here
+    ]
+  },
+  // Define who can manage each tag type
+  "tagOwners": {
+    "tag:bastion": [
+      "group:admins"
+    ],
+    "tag:workstation": [
+      "group:admins"
+    ],
+    "tag:code": [
+      "group:admins"
+    ]
+  },
+  // Network access rules
+  "grants": [
+    {
+      // Admins have full access to all services
+      "src": [
+        "group:admins"
+      ],
+      "dst": [
+        "tag:bastion",
+        "tag:workstation",
+        "tag:code"
+      ],
+      "ip": [
+        "*"
+      ]
+    },
+    {
+      // Bastion can access workstations (SSH, HTTPS, STUN)
+      "src": [
+        "tag:bastion"
+      ],
+      "dst": [
+        "tag:workstation"
+      ],
+      "ip": [
+        "tcp:22",
+        "tcp:443",
+        "udp:3478"
+      ]
+    },
+    {
+      // Bastion can access code servers (SSH, code-server)
+      "src": [
+        "tag:bastion"
+      ],
+      "dst": [
+        "tag:code"
+      ],
+      "ip": [
+        "tcp:22",
+        "tcp:8443"
+      ]
+    },
+    {
+      // Workstations and code servers can communicate on dev ports
+      "src": [
+        "tag:workstation",
+        "tag:code"
+      ],
+      "dst": [
+        "tag:workstation",
+        "tag:code"
+      ],
+      "ip": [
+        "tcp:3000-9999"
+      ]
+    }
+  ],
+  // SSH access rules
+  "ssh": [
+    {
+      // Admins can SSH as 'root' to bastion servers for privileged access
+      "action": "accept",
+      "src": [
+        "group:admins"
+      ],
+      "dst": [
+        "tag:bastion"
+      ],
+      "users": [
+        "root"
+      ]
+    },
+    {
+      // Admins can SSH as 'devmesh' user to all services
+      "action": "accept",
+      "src": [
+        "group:admins"
+      ],
+      "dst": [
+        "tag:bastion",
+        "tag:workstation",
+        "tag:code"
+      ],
+      "users": [
+        "devmesh"
+      ]
+    },
+    {
+      // Bastion can SSH as 'devmesh' or 'root' to workstations/code servers
+      "action": "accept",
+      "src": [
+        "tag:bastion"
+      ],
+      "dst": [
+        "tag:workstation",
+        "tag:code"
+      ],
+      "users": [
+        "devmesh",
+        "root"
+      ]
+    }
+  ],
+  // Test rules to validate ACL behavior
+  "tests": [
+    // 1. external / shared users must not RDP
+    {
+      "src": "placeholder-external@example.invalid",
+      "proto": "tcp",
+      "deny": [
+        "tag:workstation:3389"
+      ]
+    },
+    // 2. bastion must reach code on 8443
+    {
+      "src": "tag:bastion",
+      "proto": "tcp",
+      "accept": [
+        "tag:code:8443"
+      ]
+    },
+    // 3. guardrail: no public Internet reachability
+    {
+      "src": "group:admins",
+      "proto": "tcp",
+      "deny": [
+        "8.8.8.8:443"
+      ]
+    },
+    // 4-5. dev-port reachability between code and workstation
+    {
+      "src": "tag:workstation",
+      "proto": "tcp",
+      "accept": [
+        "tag:code:8080"
+      ]
+    },
+    {
+      "src": "tag:code",
+      "proto": "tcp",
+      "accept": [
+        "tag:workstation:8080"
+      ]
+    }
+  ]
+}

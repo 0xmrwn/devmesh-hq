@@ -40,9 +40,17 @@ You will need to define the Access Control Lists (ACLs) for your Tailscale netwo
 
 1.  **Copy the template file**:
     ```sh
-    cp rules/tailscale-acl-template.json rules/tailscale-acl.json
+    cp rules/tailscale-acl-template.jsonc rules/tailscale-acl.jsonc
     ```
-2.  **Edit `rules/tailscale-acl.json`** and replace all instances of `your-tailscale-user@example.com` with your actual Tailscale user email.
+2.  **Edit `rules/tailscale-acl.jsonc`** by replacing `your-tailscale-user@example.com` (line 5) with your actual Tailscale user email.
+    ```jsonc
+      // Define user groups - admins can manage the entire tailnet
+      "groups": {
+         "group:admins": [
+            "your-tailscale-user@example.com" // Add your tailscale user here
+         ]
+      },
+    ```
 
 > [!NOTE]
 > You do **not** need to paste ACLs into the Tailscale Admin Console. Terraform will manage ACLs, MagicDNS, and tailnet settings automatically.
