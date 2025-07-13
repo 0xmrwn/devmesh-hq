@@ -20,6 +20,7 @@ A comprehensive cloud-based development environment built on Google Cloud Platfo
 Before you begin, ensure you have the following:
 
 - A **Google Cloud Platform (GCP) Account** with an active billing account.
+- A **GCP Project ID** where resources will be provisioned. You can create a new project in the [Google Cloud Console](https://console.cloud.google.com/).
 - **Terraform** version `>= 1.8.0, < 2.0.0` installed.
 - **Google Cloud SDK** (`gcloud`) installed and authenticated (`gcloud auth login`).
 - A **Tailscale Account** and a generated **API Access Token**.
