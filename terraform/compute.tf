@@ -17,10 +17,11 @@ resource "google_compute_instance" "bastion" {
   name                = "${var.base_name}-bastion"
   zone                = var.us_zone
   machine_type        = var.bastion_machine_type
-  deletion_protection = true
+  deletion_protection = false
 
   boot_disk {
-    source = google_compute_disk.bastion.self_link
+    source      = google_compute_disk.bastion.self_link
+    auto_delete = false
   }
 
   metadata = {
@@ -35,7 +36,7 @@ resource "google_compute_instance" "bastion" {
   }
 
   service_account {
-    email  = google_service_account.devmesh_hub_sa.email
+    email  = google_service_account.bastion_sa.email
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
 
@@ -58,7 +59,8 @@ resource "google_compute_instance" "code" {
   tags         = ["allow-tailscale-udp"]
 
   boot_disk {
-    source = google_compute_disk.code.self_link
+    source      = google_compute_disk.code.self_link
+    auto_delete = false
   }
 
   labels = {
@@ -79,7 +81,7 @@ resource "google_compute_instance" "code" {
   }
 
   service_account {
-    email  = google_service_account.devmesh_hub_sa.email
+    email  = google_service_account.code_sa.email
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
 
@@ -98,7 +100,8 @@ resource "google_compute_instance" "workstation" {
   tags         = ["allow-tailscale-udp"]
 
   boot_disk {
-    source = google_compute_disk.workstation.self_link
+    source      = google_compute_disk.workstation.self_link
+    auto_delete = false
   }
 
   metadata = {
@@ -113,7 +116,7 @@ resource "google_compute_instance" "workstation" {
   }
 
   service_account {
-    email  = google_service_account.devmesh_hub_sa.email
+    email  = google_service_account.workstation_sa.email
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
 

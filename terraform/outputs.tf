@@ -1,9 +1,19 @@
-# Service Account
-output "service_account" {
-  description = "DevMesh Hub service account information"
+# Service Accounts
+output "service_accounts" {
+  description = "DevMesh service accounts information"
   value = {
-    email = google_service_account.devmesh_hub_sa.email
-    name  = google_service_account.devmesh_hub_sa.name
+    bastion = {
+      email = google_service_account.bastion_sa.email
+      name  = google_service_account.bastion_sa.name
+    }
+    code = {
+      email = google_service_account.code_sa.email
+      name  = google_service_account.code_sa.name
+    }
+    workstation = {
+      email = google_service_account.workstation_sa.email
+      name  = google_service_account.workstation_sa.name
+    }
   }
 }
 
