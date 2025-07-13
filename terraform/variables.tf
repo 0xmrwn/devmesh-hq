@@ -90,9 +90,9 @@ variable "debian_12_version" {
 variable "default_disk_types" {
   type        = map(string)
   description = "Default disk type for the disks"
-  default     = {
-    bastion = "pd-standard"
-    code    = "pd-balanced"
+  default = {
+    bastion     = "pd-standard"
+    code        = "pd-balanced"
     workstation = "pd-balanced"
   }
 }
