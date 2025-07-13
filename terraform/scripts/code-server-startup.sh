@@ -54,20 +54,6 @@ EOF
 # (documented in systemd.exec(5)) :contentReference[oaicite:2]{index=2}
 systemctl daemon-reload   # reload unit files now that the drop-in exists
 
-# 3. (Optional) VS Code setting so detached terminals also land here
-sudo -u "${TARGET_USER}" bash -c '
-SETTINGS_DIR="$HOME/.local/share/code-server/User"
-mkdir -p "$SETTINGS_DIR"
-if [ -f "$SETTINGS_DIR/settings.json" ]; then
-  jq ". + {\"terminal.integrated.cwd\": \"'"${WORKSPACE_DIR}"'\"}" \
-     "$SETTINGS_DIR/settings.json" >"$SETTINGS_DIR/settings.tmp" && \
-     mv "$SETTINGS_DIR/settings.tmp" "$SETTINGS_DIR/settings.json"
-else
-  echo "{\"terminal.integrated.cwd\": \"'"${WORKSPACE_DIR}"'\"}" \
-       >"$SETTINGS_DIR/settings.json"
-fi
-'
-
 # --- Development Tools Installation (as target user) ---
 # Install uv (Python package manager)
 sudo -u "$TARGET_USER" bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
