@@ -86,8 +86,16 @@ sudo -u "$TARGET_USER" bash -c '
 
 # Install Rust
 sudo -u "$TARGET_USER" bash -c '
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    # Install Rust non-interactively
+    curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+    # Source cargo environment to make rustc and cargo available
+    source "$HOME/.cargo/env"
+
+    # Verify installation
     echo "Rust installed successfully."
+    echo "Rustc version: $(rustc --version)"
+    echo "Cargo version: $(cargo --version)"
 '
 
 # --- Tailscale Setup ---
