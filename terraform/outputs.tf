@@ -84,3 +84,8 @@ output "connection_info" {
     workstation_ssh = "gcloud compute ssh ${google_compute_instance.workstation.name} --zone=${google_compute_instance.workstation.zone}"
   }
 }
+
+output "dependency_group" {
+  description = "Shared dependency group identifier for all linked resources."
+  value       = random_pet.global_version.id
+}

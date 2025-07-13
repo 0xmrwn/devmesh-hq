@@ -45,6 +45,9 @@ resource "google_compute_instance" "bastion" {
     enable_vtpm                 = true
   }
 
+  labels = {
+    dependency_group = random_pet.global_version.id
+  }
 }
 
 resource "google_compute_instance" "code" {
@@ -60,6 +63,7 @@ resource "google_compute_instance" "code" {
 
   labels = {
     goog-ops-agent-policy = "v2-x86-template-1-4-0"
+    dependency_group = random_pet.global_version.id
   }
 
   metadata = {
@@ -117,6 +121,10 @@ resource "google_compute_instance" "workstation" {
     enable_integrity_monitoring = true
     enable_secure_boot          = true
     enable_vtpm                 = true
+  }
+
+  labels = {
+    dependency_group = random_pet.global_version.id
   }
 
 }

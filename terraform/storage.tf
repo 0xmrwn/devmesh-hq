@@ -43,6 +43,10 @@ resource "google_compute_disk" "bastion" {
     type = "VIRTIO_SCSI_MULTIQUEUE"
   }
 
+  labels = {
+    dependency_group = random_pet.global_version.id
+  }
+
 }
 
 resource "google_compute_disk" "code" {
@@ -65,6 +69,10 @@ resource "google_compute_disk" "code" {
 
   guest_os_features {
     type = "VIRTIO_SCSI_MULTIQUEUE"
+  }
+
+  labels = {
+    dependency_group = random_pet.global_version.id
   }
 
 }
@@ -97,6 +105,10 @@ resource "google_compute_disk" "workstation" {
 
   guest_os_features {
     type = "VIRTIO_SCSI_MULTIQUEUE"
+  }
+
+  labels = {
+    dependency_group = random_pet.global_version.id
   }
 
 }
