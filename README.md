@@ -178,6 +178,8 @@ All instances connect via Tailscale VPN for secure networking and use the defaul
 - **VS Code Server** with HTTPS access via Tailscale SSL certificates
 - **Node.js 23** with npm and nvm
 - **Python with uv** package manager
+- **Bun** JavaScript runtime and package manager
+- **Rust** toolchain (rustc, cargo)
 - **Git** and standard build tools
 
 ### Remote Desktop
