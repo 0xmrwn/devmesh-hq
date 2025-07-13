@@ -177,6 +177,24 @@ After deployment, access your infrastructure via:
 - **Remote Desktop**: Setup Chrome Remote Desktop on the workstation (see setup instructions below)
 - **SSH**: Use Tailscale SSH to connect to any instance
 
+## VS Code Server Access
+
+To access your VS Code Server for the first time:
+
+1. SSH into the code server via Tailscale:
+   ```bash
+   ssh devmesh@devmesh-code.{tailnet}.ts.net
+   ```
+
+2. Retrieve the generated password:
+   ```bash
+   cat /home/devmesh/code-server-password.txt
+   ```
+
+3. Access VS Code Server at: `https://devmesh-code.{tailnet}.ts.net:8443`
+
+4. Use the password from step 2 to authenticate
+
 ## Chrome Remote Desktop Setup
 
 Chrome Remote Desktop has been installed but requires manual authorization.
@@ -216,24 +234,6 @@ To complete the setup:
    ```
 
 10. Connect via: https://remotedesktop.google.com/
-
-## VS Code Server Access
-
-To access your VS Code Server for the first time:
-
-1. SSH into the code server via Tailscale:
-   ```bash
-   ssh devmesh@devmesh-code.{tailnet}.ts.net
-   ```
-
-2. Retrieve the generated password:
-   ```bash
-   cat /home/devmesh/code-server-password.txt
-   ```
-
-3. Access VS Code Server at: `https://devmesh-code.{tailnet}.ts.net:8443`
-
-4. Use the password from step 2 to authenticate
 
 ## Cost Optimization
 
