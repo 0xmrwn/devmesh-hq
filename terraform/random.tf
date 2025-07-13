@@ -5,4 +5,4 @@ resource "random_pet" "global_version" {
     workstation_image = var.debian_12_version
     zone              = var.default_zone
   }
-} 
+}

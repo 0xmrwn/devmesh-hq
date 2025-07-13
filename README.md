@@ -114,7 +114,7 @@ Create a `terraform.tfvars` file to provide the necessary variables for the depl
 
     project_id         = "your-gcp-project-id"
     tailscale_api_key  = "tskey-api-..."
-    
+
     # Optional: Override other default variables
     # default_region       = "europe-southwest1"
     # default_zone         = "europe-southwest1-b"

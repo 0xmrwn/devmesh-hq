@@ -45,16 +45,16 @@ sudo -u "$TARGET_USER" bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
 sudo -u "$TARGET_USER" bash -c '
     # Download and install nvm
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-    
+
     # Source nvm and install Node.js
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    
+
     # Install Node.js
     nvm install 23
     nvm use 23
     nvm alias default 23
-    
+
     # Verify installation
     echo "Node.js version: $(node -v)"
     echo "npm version: $(npm -v)"
