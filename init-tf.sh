@@ -40,15 +40,15 @@ if [[ -z "${PROJECT_ID:-}" ]]; then
   exit 1
 fi
 
-if [[ -z "${BUCKET_NAME:-}" ]]; then
-  echo "❌ BUCKET_NAME is required but not set in ${ENV_FILE}"
+if [[ -z "${BUCKET_LOCATION:-}" ]]; then
+  echo "❌ BUCKET_LOCATION is required but not set in ${ENV_FILE}"
   exit 1
 fi
 
-# Set defaults for optional values
-TF_SA_NAME="${TF_SA_NAME:-devmesh-infra-admin}"
-BUCKET_LOCATION="${BUCKET_LOCATION:-us-central1}"
-LIFECYCLE_FILE="${LIFECYCLE_FILE:-rules/tfstate-bucket-lifecycle.json}"
+# Set internal defaults for all other values
+TF_SA_NAME="devmesh-infra-admin"
+BUCKET_NAME="devmesh-tf-state"
+LIFECYCLE_FILE="rules/tfstate-bucket-lifecycle.json"
 
 # Derive dependent values
 TF_SA_ID="${TF_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
