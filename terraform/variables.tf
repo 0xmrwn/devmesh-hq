@@ -40,6 +40,7 @@ variable "us_zone" {
 variable "deployer_sa_name" {
   type        = string
   description = "Email of the service account to impersonate"
+  default     = "devmesh-infra-admin"
 }
 
 # -----------------------------------------------------------
