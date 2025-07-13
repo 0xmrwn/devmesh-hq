@@ -136,11 +136,11 @@ Terraform will provision the GCP resources and the Tailscale clients on each mac
 
 DevMesh HQ deploys three compute instances across two GCP regions:
 
-| Instance | Location | Purpose | Specs |
-|----------|----------|---------|-------|
-| **Bastion** | `us-east1-b` | Secure entry point | `e2-micro`, Ubuntu 22.04, 10GB |
-| **Code Server** | `europe-southwest1-b` | VS Code development environment | `e2-medium`, Debian 11, 50GB |
-| **Workstation** | `europe-southwest1-b` | Remote desktop with XFCE | `e2-standard-2`, Debian 12, 50GB |
+| Instance        | Purpose                        | Specs                          |
+|-----------------|-------------------------------|-------------------------------|
+| **Bastion**     | Secure entry point            | `e2-micro`, Ubuntu 22.04, 10GB |
+| **Code Server** | VS Code development environment| `e2-medium`, Debian 11, 50GB   |
+| **Workstation** | Remote desktop with XFCE      | `e2-standard-2`, Debian 12, 50GB |
 
 All instances connect via Tailscale VPN for secure networking and use the default GCP VPC with NAT gateways for internet access.
 
