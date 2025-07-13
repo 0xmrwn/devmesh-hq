@@ -249,7 +249,7 @@ To complete the setup:
 
 ## Maintenance
 
-- **Tailscale auth keys** should be rotated periodically
+- **Tailscale auth keys** should be rotated periodically (automatically recreated by Terraform when expired)
 - **System updates** are not automatic; image versions are fixed in [`variables.tf`](terraform/variables.tf)
 - **Backup** important development data regularly
 
