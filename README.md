@@ -1,170 +1,261 @@
 # DevMesh HQ - Cloud Development Infrastructure
 
-A comprehensive cloud-based development environment built on Google Cloud Platform (GCP) with secure networking via Tailscale VPN. This infrastructure provides remote access to development tools and desktop environments for distributed teams.
+A comprehensive cloud-based development environment built on Google Cloud Platform (GCP) with secure networking via Tailscale VPN. This infrastructure provides remote access to development tools and desktop environments.
 
-## 🏗️ Architecture Overview
+## Key Features
 
-DevMesh HQ deploys three main compute instances across two GCP regions:
+- **Secure Mesh Networking:** Tailscale VPN with MagicDNS and identity-based SSH provides strong, user-centric security.
+- **Cloud-Based Development Environment:** Instantly access VS Code Server with the latest Node.js (v23), Python (with uv), and a complete modern toolchain, on any device.
+- **Remote Desktop Access:** High-performance XFCE desktop available via Chrome Remote Desktop, optimized for low-latency, cross-device productivity.
+- **Integrated Security:** GCP Secret Manager, automatic SSL certificates, shielded VMs, and strict access controls ensure robust protection.
+- **Multi-Region Deployment:** Operates across US and European regions for high availability, low latency, and cost optimization using Always Free tier where possible.
+- **Automated Provisioning:** One-command bootstrap and Terraform-driven infrastructure as code enable reproducible, auditable deployments.
+- **Simple Access:** Connect to your development environment, remote desktop, or SSH without complex configuration.
 
-### Infrastructure Components
+##  Prerequisites
 
-| Component | Location | Purpose | Specifications |
-|-----------|----------|---------|----------------|
-| **Bastion Hub** | `us-east1-b` | Secure entry point and network hub | `e2-micro`, Ubuntu 22.04 |
-| **DevMesh Code** | `europe-southwest1-b` | Development server with VS Code Server | `e2-medium`, Debian 11, 50GB |
-| **DevMesh Desktop** | `europe-southwest1-b` | Remote desktop environment | `e2-standard-2`, Debian 12, 50GB |
+Before you begin, ensure you have the following:
 
-### Key Features
+- A **Google Cloud Platform (GCP) Account** with an active billing account.
+- **Terraform** version `>= 1.8.0, < 2.0.0` installed.
+- **Google Cloud SDK** (`gcloud`) installed and authenticated (`gcloud auth login`).
+- A **Tailscale Account** and a generated **Auth Key**.
 
-- 🔒 **Secure Networking**: Tailscale VPN with MagicDNS for private mesh networking
-- 💻 **Development Environment**: VS Code Server with modern toolchain (Node.js 23, Python/uv)
-- 🖥️ **Remote Desktop**: XFCE desktop accessible via Chrome Remote Desktop
-- 🛡️ **Security**: GCP Secret Manager integration, automatic SSL certificates
-- 🌍 **Multi-Region**: Strategic deployment across US and Europe
+## Deployment Procedure
 
-## 🚀 Quick Start
+Follow these steps to deploy the DevMesh HQ infrastructure.
 
-### Prerequisites
+### Step 1: Clone the Repository
 
-- Google Cloud Platform account with billing enabled
-- Terraform >= 1.0
-- Tailscale account and auth key
-- Appropriate GCP permissions for compute, networking, and secret management
-
-### Deployment
-
-1. **Configure Tailscale Auth Key**
-   ```bash
-   # Store your Tailscale auth key in GCP Secret Manager
-   gcloud secrets create TAILSCALE_AUTHKEY --data-file=<(echo -n "your-tailscale-auth-key")
-   ```
-
-2. **Deploy Infrastructure**
-   ```bash
-   # Initialize and apply Terraform configuration
-   cd terraform/
-   terraform init
-   terraform plan
-   terraform apply
-   ```
-
-3. **Access Your Environment**
-   - **Code Server**: `https://devmesh-code.<tailnet-name>:8443`
-   - **Desktop**: Chrome Remote Desktop (search for "DevMesh-Madrid")
-   - **SSH Access**: Via Tailscale SSH to any instance
-
-## 📁 Project Structure
-
-```
-devmesh-hq/
-├── scripts/                    # Instance startup scripts
-│   ├── bastion-startup.sh     # Bastion hub configuration
-│   ├── code-server-startup.sh # Development server setup
-│   └── crd-startup.sh         # Chrome Remote Desktop setup
-├── terraform/                 # Infrastructure as Code
-│   ├── projects/devmesh-hq/   # Main project resources
-│   │   ├── ComputeInstance/   # VM configurations
-│   │   ├── ComputeFirewall/   # Network security rules
-│   │   └── IAMServiceAccount/ # Service accounts
-│   └── 344131660565/          # Shared services project
-│       └── SecretManagerSecret/ # Tailscale auth key storage
-└── README.md                  # This file
+Start by cloning this repository to your local machine:
+```sh
+git clone git@github.com:0xmrwn/devmesh-hq.git
+cd devmesh-hq
 ```
 
-## 🛠️ Development Environment
 
-The **DevMesh Code** instance comes pre-configured with:
+### Step 2: Configure Tailscale ACLs
 
-### Development Tools
-- **VS Code Server**: Web-based IDE accessible via HTTPS
-- **Node.js 23**: Latest Node.js with npm
-- **Python/uv**: Modern Python package manager
-- **Git**: Version control
-- **Build tools**: GCC, autotools, development headers
+You will need to define the Access Control Lists (ACLs) for your Tailscale network to grant the appropriate permissions for users and tagged devices.
+
+1.  Open the template file `rules/tailscale-acl-template.json`.
+2.  Replace all instances of `your-tailscale-user@example.com` with your actual Tailscale user email.
+3.  Copy the entire modified JSON content.
+4.  Paste it into the [Tailscale Admin Console](https://login.tailscale.com/admin/acls), replacing the existing ACLs.
+
+### Step 3: Choose a Terraform Backend
+
+You can manage your Terraform state either locally or using a remote GCS bucket. The remote backend is highly recommended for state persistence.
+
+#### Option A: Remote Backend (Recommended)
+
+This approach stores the Terraform state file in a dedicated Google Cloud Storage bucket, which is the standard for production infrastructure.
+
+1.  **Create a `.env` file** from the example:
+    ```sh
+    cp example.env .env
+    ```
+
+2.  **Customize your `.env` file** with your GCP `PROJECT_ID` and desired `BUCKET_LOCATION`.
+> [!IMPORTANT]
+> Any changes made to values in `.env` must be reflected in the corresponding Terraform configuration files (`backend.tf` and `terraform.tfvars`).
+
+3.  **Run the bootstrap script**: This script will create the GCS bucket and a dedicated service account for Terraform to use.
+    ```sh
+    ./init-tf.sh
+    ```
+    The script will prompt for confirmation before creating resources.
+
+#### Option B: Local Backend
+
+This is simpler for quick tests but not recommended for long-term use.
+
+1.  **Copy the code block below and replace the contents of `terraform/backend.tf`**:
+
+    ```hcl
+    terraform {
+      backend "local" {
+        path = "terraform.tfstate"
+      }
+    }
+    ```
+
+2.  **Authenticate gcloud**: Ensure you are logged in with a user that has sufficient permissions to create the resources defined in the Terraform configuration.
+
+### Step 4: Configure Terraform Variables
+
+Create a `terraform.tfvars` file to provide the necessary variables for the deployment.
+
+1.  **Create the file**:
+    ```sh
+    touch terraform/terraform.tfvars
+    ```
+
+2.  **Add your configuration**. You must provide your `project_id` from GCP and `tailscale_auth_key`. You can also override any default values from `variables.tf`.
+
+    ```hcl
+    # terraform/terraform.tfvars
+
+    project_id         = "your-gcp-project-id"
+    tailscale_auth_key = "tskey-auth-your-key-here"
+    
+    # Optional: Override other default variables
+    # default_region       = "europe-southwest1"
+    # default_zone         = "europe-southwest1-b"
+    # us_region            = "us-east1"
+    # us_zone              = "us-east1-b"
+    ```
+
+> [!NOTE]
+> **Region Selection**: The default regions (`europe-southwest1`) and zones are chosen for minimal latency to European users. The US region (`us-east1`) and zone are specifically configured to take advantage of Google Cloud's Always Free tier, which provides an `e2-micro` instance at no cost when deployed in eligible US regions.
+
+
+### Step 5: Deploy the Infrastructure
+
+Once your backend and variables are configured, you can deploy the infrastructure.
+
+1.  Navigate to the Terraform directory:
+    ```sh
+    cd terraform
+    ```
+
+2.  Initialize Terraform:
+    ```sh
+    terraform init
+    ```
+
+3.  Plan and apply the changes:
+    ```sh
+    terraform plan
+    terraform apply
+    ```
+
+Terraform will provision the GCP resources and the Tailscale clients on each machine will automatically connect to your network.
+
+## Architecture Overview
+
+DevMesh HQ deploys three compute instances across two GCP regions:
+
+| Instance | Location | Purpose | Specs |
+|----------|----------|---------|-------|
+| **Bastion** | `us-east1-b` | Secure entry point | `e2-micro`, Ubuntu 22.04, 10GB |
+| **Code Server** | `europe-southwest1-b` | VS Code development environment | `e2-medium`, Debian 11, 50GB |
+| **Workstation** | `europe-southwest1-b` | Remote desktop with XFCE | `e2-standard-2`, Debian 12, 50GB |
+
+All instances connect via Tailscale VPN for secure networking and use the default GCP VPC with NAT gateways for internet access.
+
+## What You Get
+
+### Always-On Bastion
+- **e2-micro instance** (Always Free eligible, US region)
+- **Tailscale SSH**: Connect securely from anywhere, no public IP required
+- **GCP Service Account**: Manage other instances with `gcloud`
+- Acts as a **portable, always-on Google Cloud shell** for administration
+
+### Development Environment
+- **VS Code Server** with HTTPS access via Tailscale SSL certificates
+- **Node.js 23** with npm and nvm
+- **Python with uv** package manager
+- **Git** and standard build tools
+
+### Remote Desktop
+- **XFCE desktop** environment
+- **Chrome Remote Desktop** for access from any device
+- Integrated with Tailscale network
 
 ### Security Features
-- **Automatic SSL**: Tailscale-issued certificates for HTTPS
-- **Firewall Protection**: UFW configured for necessary ports
-- **Secure SSH**: Tailscale SSH with identity-based authentication
+- **Tailscale SSH** with identity-based authentication
+- **Automatic SSL certificates** via Tailscale
+- **GCP Secret Manager** for sensitive data
+- **Shielded VMs** with secure boot and integrity monitoring
 
-## 🖥️ Remote Desktop
+## Access
 
-The **DevMesh Desktop** instance provides:
+After deployment, access your infrastructure via:
 
-- **XFCE Desktop Environment**: Lightweight and responsive
-- **Chrome Remote Desktop**: Access from any device with Chrome
-- **Tailscale Integration**: Secure network connectivity
-- **Automatic Registration**: Headless CRD setup
+- **VS Code Server**: `https://devmesh-code.{tailnet}.ts.net:8443`
+- **Remote Desktop**: Setup Chrome Remote Desktop on the workstation (see setup instructions below)
+- **SSH**: Use Tailscale SSH to connect to any instance
 
-## 🔧 Configuration Details
+## Chrome Remote Desktop Setup
 
-### Network Architecture
-- **VPC**: Uses default GCP networks in each region
-- **Subnets**: Regional subnets with automatic IP assignment
-- **NAT**: Cloud NAT for outbound internet access
-- **Private IPs**: 
-  - Bastion: `10.142.0.2`
-  - Code Server: `10.204.0.3` 
-  - Desktop: `10.204.0.2`
+Chrome Remote Desktop has been installed but requires manual authorization.
+To complete the setup:
 
-### Service Accounts
-- **devmesh-hub-sa**: Dedicated service account with cloud platform scope
+1. SSH into the workstation via Tailscale:
+   ```bash
+   ssh devmesh@devmesh-workstation.{tailnet}.ts.net
+   ```
 
-### Secrets Management
-- **Tailscale Auth Key**: Stored in GCP Secret Manager
-- **SSL Certificates**: Automatically provisioned by Tailscale
+2. Switch to the devmesh user (if not already):
+   ```bash
+   sudo su - devmesh
+   ```
 
-## 🚨 Security Considerations
+3. Go to the Chrome Remote Desktop headless setup page: https://remotedesktop.google.com/headless
 
-1. **Network Isolation**: All instances use Tailscale for secure communication
-2. **Identity-based SSH**: Leverages Tailscale's identity provider integration
-3. **Encrypted Transit**: All connections use TLS/SSL
-4. **Least Privilege**: Service accounts have minimal required permissions
-5. **Automatic Updates**: Instances configured for security updates
+4. Sign in with your Google account (the one you want to use for remote access)
 
-## 📊 Cost Optimization
+5. Click "Begin" and then "Authorize"
 
-- **Right-sized Instances**: Minimal specs for each workload
-- **Preemptible Options**: Consider for development environments
-- **Regional Placement**: Strategic location for reduced latency
-- **Auto-shutdown**: Implement schedules for non-production use
+6. Copy the command that looks like this:
+   ```bash
+   DISPLAY= /opt/google/chrome-remote-desktop/start-host \
+   --code="4/xxxxxxxxxxxxxxxxxxxxxxxx" \
+   --redirect-url="https://remotedesktop.google.com/_/oauthredirect" \
+   --name=$(hostname)
+   ```
 
-## 🔄 Maintenance
+7. Run that command in the SSH session
 
-### Regular Tasks
-- Monitor Tailscale connectivity and auth key rotation
-- Update VS Code Server and development tools
-- Review and apply security patches
-- Backup important data and configurations
+8. When prompted, set a 6-digit PIN for remote access
 
-### Scaling
-- Add additional development instances by copying terraform configurations
-- Modify machine types based on workload requirements
-- Implement load balancing for multiple developers (or simply use [Coder](https://coder.com/docs))
+9. Verify the service is running:
+   ```bash
+   sudo systemctl status chrome-remote-desktop@devmesh
+   ```
 
-## 📚 Documentation
+10. Connect via: https://remotedesktop.google.com/
 
-- [Tailscale Documentation](https://tailscale.com/docs/)
-- [VS Code Server](https://github.com/coder/code-server)
-- [Chrome Remote Desktop](https://support.google.com/chrome/answer/1649523)
-- [GCP Compute Engine](https://cloud.google.com/compute/docs)
+## VS Code Server Access
 
-## 🤝 Contributing
+To access your VS Code Server for the first time:
 
-1. Fork the repository
-2. Create a feature branch
-3. Test infrastructure changes in a development project
-4. Submit a pull request with detailed description
+1. SSH into the code server via Tailscale:
+   ```bash
+   ssh devmesh@devmesh-code.{tailnet}.ts.net
+   ```
 
-## 📄 License
+2. Retrieve the generated password:
+   ```bash
+   cat /home/devmesh/code-server-password.txt
+   ```
+
+3. Access VS Code Server at: `https://devmesh-code.{tailnet}.ts.net:8443`
+
+4. Use the password from step 2 to authenticate
+
+## Cost Optimization
+
+- Bastion instance runs on GCP's Always Free tier (`e2-micro` in US region)
+- Consider stopping instances when not in use
+- Use preemptible instances for development workloads
+
+## Maintenance
+
+- **Tailscale auth keys** should be rotated periodically
+- **System updates** are not automatic; image versions are fixed in [`variables.tf`](terraform/variables.tf)
+- **Backup** important development data regularly
+
+## Documentation
+
+- [Terraform](https://www.terraform.io/docs/)
+- [Google Cloud IAM](https://cloud.google.com/iam/docs)
+- [Google Cloud Storage](https://cloud.google.com/storage/docs)
+- [gcloud CLI](https://cloud.google.com/sdk/gcloud)
+- [Tailscale](https://tailscale.com/kb/)
+- [Code Server](https://coder.com/docs/code-server/latest)
+
+## License
 
 This project is licensed under the Unlicense - see the [LICENSE](LICENSE) file for details.
-
-## ⚠️ Important Notes
-
-- **Tailscale Auth Key**: Keep your auth key secure and rotate regularly
-- **Cost Monitoring**: Monitor GCP usage to avoid unexpected charges
-- **Data Backup**: Implement backup strategies for important development data
-- **Access Control**: Review Tailscale ACLs for proper access restrictions
-
----
