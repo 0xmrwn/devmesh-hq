@@ -38,10 +38,14 @@ cd devmesh-hq
 
 You will need to define the Access Control Lists (ACLs) for your Tailscale network to grant the appropriate permissions for users and tagged devices.
 
-1.  Open the template file `rules/tailscale-acl-template.json`.
-2.  Replace all instances of `your-tailscale-user@example.com` with your actual Tailscale user email.
-3.  Copy the entire modified JSON content.
-4.  Paste it into the [Tailscale Admin Console](https://login.tailscale.com/admin/acls), replacing the existing ACLs.
+1.  **Copy the template file**:
+    ```sh
+    cp rules/tailscale-acl-template.json rules/tailscale-acl.json
+    ```
+2.  **Edit `rules/tailscale-acl.json`** and replace all instances of `your-tailscale-user@example.com` with your actual Tailscale user email.
+
+> [!NOTE]
+> You do **not** need to paste ACLs into the Tailscale Admin Console. Terraform will manage ACLs, MagicDNS, and tailnet settings automatically.
 
 ### Step 3: Choose a Terraform Backend
 
@@ -91,13 +95,13 @@ Create a `terraform.tfvars` file to provide the necessary variables for the depl
     touch terraform/terraform.tfvars
     ```
 
-2.  **Add your configuration**. You must provide your `project_id` from GCP and `tailscale_auth_key`. You can also override any default values from `variables.tf`.
+2.  **Add your configuration**. You must provide your `project_id` from GCP and your **Tailscale API key**. You can also override any default values from `variables.tf`.
 
     ```hcl
     # terraform/terraform.tfvars
 
     project_id         = "your-gcp-project-id"
-    tailscale_auth_key = "tskey-auth-your-key-here"
+    tailscale_api_key  = "tskey-api-..."
     
     # Optional: Override other default variables
     # default_region       = "europe-southwest1"
@@ -107,6 +111,8 @@ Create a `terraform.tfvars` file to provide the necessary variables for the depl
     ```
 
 > [!NOTE]
+> **Tailscale API Key**: The `tailscale_api_key` variable refers to a Tailscale **API access token** (generated from https://login.tailscale.com/admin/settings/keys), **not** a Tailscale Auth Key. API keys are used for managing resources via the Tailscale provider in Terraform.
+>
 > **Region Selection**: The default regions (`europe-southwest1`) and zones are chosen for minimal latency to European users. The US region (`us-east1`) and zone are specifically configured to take advantage of Google Cloud's Always Free tier, which provides an `e2-micro` instance at no cost when deployed in eligible US regions.
 
 

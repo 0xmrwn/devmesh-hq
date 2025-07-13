@@ -12,5 +12,5 @@ resource "google_secret_manager_secret_version" "tailscale_authkey" {
   deletion_policy = "DELETE"
   enabled         = true
   secret          = google_secret_manager_secret.tailscale_authkey.id
-  secret_data     = var.tailscale_auth_key
+  secret_data     = tailscale_tailnet_key.nodes_auth_key.key
 }

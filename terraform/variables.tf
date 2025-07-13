@@ -43,6 +43,11 @@ variable "deployer_sa_name" {
   default     = "devmesh-infra-admin"
 }
 
+variable "tailscale_api_key" {
+  type        = string
+  description = "API key for authenticating with Tailscale API"
+}
+
 # -----------------------------------------------------------
 # Compute variables
 # -----------------------------------------------------------
@@ -129,9 +134,4 @@ variable "tailscale_secret_id" {
   type        = string
   description = "Tailscale secret ID"
   default     = "TAILSCALE_AUTHKEY"
-}
-
-variable "tailscale_auth_key" {
-  type        = string
-  description = "Tailscale auth key"
 }

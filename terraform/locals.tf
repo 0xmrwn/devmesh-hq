@@ -6,4 +6,7 @@ locals {
   bastion_startup_script     = "${local.common_functions}\n${file("${path.module}/scripts/bastion-startup.sh")}"
   code_server_startup_script = "${local.common_functions}\n${file("${path.module}/scripts/code-server-startup.sh")}"
   workstation_startup_script = "${local.common_functions}\n${file("${path.module}/scripts/workstation-startup.sh")}"
+
+  # Load Tailscale ACL
+  tailscale_acl = file("${path.module}/../rules/tailscale-acl.json")
 }
