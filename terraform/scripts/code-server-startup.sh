@@ -81,7 +81,14 @@ sudo -u "$TARGET_USER" bash -c '
 # Install Bun
 sudo -u "$TARGET_USER" bash -c '
     curl -fsSL https://bun.sh/install | bash
+
+    # Add bun to path for verification
+    export BUN_INSTALL="$HOME/.bun"
+    export PATH="$BUN_INSTALL/bin:$PATH"
+
+    # Verify installation
     echo "Bun installed successfully."
+    echo "Bun version: $(bun -v)"
 '
 
 # Install Rust
