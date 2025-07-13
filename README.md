@@ -4,7 +4,9 @@ A comprehensive cloud-based development environment built on Google Cloud Platfo
 
 > [!IMPORTANT]
 > **This project was built as an experiment (running Claude Code/Gemini CLI from my iPhone).**
+>
 > Open-sourced as-is.
+>
 > Deploy at your own risk.
 
 ## Key Features
