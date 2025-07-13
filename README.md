@@ -3,11 +3,7 @@
 A comprehensive cloud-based development environment built on Google Cloud Platform (GCP) with secure networking via Tailscale VPN. This infrastructure provides remote access to development tools and desktop environments.
 
 > [!IMPORTANT]
-> **This project was built as an experiment (running Claude Code/Gemini CLI from my iPhone).**
->
-> Open-sourced as-is.
->
-> Deploy at your own risk.
+> **This project was built as an experiment (running Claude Code/Gemini CLI from my iPhone). Open-sourced as-is. Deploy at your own risk.**
 
 ## Key Features
 
