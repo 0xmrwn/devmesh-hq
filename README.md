@@ -162,6 +162,10 @@ DevMesh HQ deploys three compute instances across two GCP regions:
 
 All instances connect via Tailscale VPN for secure networking and use the default GCP VPC with NAT gateways for internet access.
 
+> [!TIP]
+> **Detailed Resource Listing:** For a comprehensive list of all resources, variables, and outputs provisioned by this Terraform module, see [`terraform/README.md`](./terraform/README.md).
+
+
 ## What You Get
 
 ### Always-On Bastion
