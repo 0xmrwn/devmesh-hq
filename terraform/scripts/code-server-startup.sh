@@ -23,6 +23,7 @@ apt-get -y install --no-install-recommends \
     apt-transport-https \
     sudo \
     openssl \
+    unzip \
     git \
     tree \
     jq \
@@ -75,6 +76,33 @@ sudo -u "$TARGET_USER" bash -c '
     # Verify installation
     echo "Node.js version: $(node -v)"
     echo "npm version: $(npm -v)"
+'
+
+# Install Bun
+sudo -u "$TARGET_USER" bash -c '
+    curl -fsSL https://bun.sh/install | bash
+
+    # Add bun to path for verification
+    export BUN_INSTALL="$HOME/.bun"
+    export PATH="$BUN_INSTALL/bin:$PATH"
+
+    # Verify installation
+    echo "Bun installed successfully."
+    echo "Bun version: $(bun -v)"
+'
+
+# Install Rust
+sudo -u "$TARGET_USER" bash -c '
+    # Install Rust non-interactively
+    curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+    # Source cargo environment to make rustc and cargo available
+    source "$HOME/.cargo/env"
+
+    # Verify installation
+    echo "Rust installed successfully."
+    echo "Rustc version: $(rustc --version)"
+    echo "Cargo version: $(cargo --version)"
 '
 
 # --- Tailscale Setup ---
