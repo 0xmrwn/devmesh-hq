@@ -4,7 +4,7 @@
 
 variable "base_name" {
   type        = string
-  description = "Base name for resources"
+  description = "Base name for DevMesh resources"
   default     = "devmesh"
 }
 
