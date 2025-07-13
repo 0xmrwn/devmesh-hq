@@ -7,41 +7,6 @@ resource "google_compute_disk" "bastion" {
   physical_block_size_bytes = var.default_block_size_bytes
   size                      = var.bastion_disk_size
   type                      = var.default_disk_types["bastion"]
-  guest_os_features {
-    type = "GVNIC"
-  }
-
-  guest_os_features {
-    type = "IDPF"
-  }
-
-  guest_os_features {
-    type = "SEV_CAPABLE"
-  }
-
-  guest_os_features {
-    type = "SEV_LIVE_MIGRATABLE"
-  }
-
-  guest_os_features {
-    type = "SEV_LIVE_MIGRATABLE_V2"
-  }
-
-  guest_os_features {
-    type = "SEV_SNP_CAPABLE"
-  }
-
-  guest_os_features {
-    type = "TDX_CAPABLE"
-  }
-
-  guest_os_features {
-    type = "UEFI_COMPATIBLE"
-  }
-
-  guest_os_features {
-    type = "VIRTIO_SCSI_MULTIQUEUE"
-  }
 
   labels = {
     dependency_group = random_pet.global_version.id
@@ -59,18 +24,6 @@ resource "google_compute_disk" "code" {
   size                      = var.code_disk_size
   type                      = var.default_disk_types["code"]
 
-  guest_os_features {
-    type = "GVNIC"
-  }
-
-  guest_os_features {
-    type = "UEFI_COMPATIBLE"
-  }
-
-  guest_os_features {
-    type = "VIRTIO_SCSI_MULTIQUEUE"
-  }
-
   labels = {
     dependency_group = random_pet.global_version.id
   }
@@ -86,26 +39,6 @@ resource "google_compute_disk" "workstation" {
   physical_block_size_bytes = var.default_block_size_bytes
   size                      = var.workstation_disk_size
   type                      = var.default_disk_types["workstation"]
-
-  guest_os_features {
-    type = "GVNIC"
-  }
-
-  guest_os_features {
-    type = "SEV_CAPABLE"
-  }
-
-  guest_os_features {
-    type = "SEV_LIVE_MIGRATABLE_V2"
-  }
-
-  guest_os_features {
-    type = "UEFI_COMPATIBLE"
-  }
-
-  guest_os_features {
-    type = "VIRTIO_SCSI_MULTIQUEUE"
-  }
 
   labels = {
     dependency_group = random_pet.global_version.id
