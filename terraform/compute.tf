@@ -48,6 +48,7 @@ resource "google_compute_instance" "bastion" {
 }
 
 resource "google_compute_instance" "code" {
+  depends_on   = [google_project_service.osconfig]
   name         = "${var.base_name}-code"
   zone         = var.default_zone
   machine_type = var.code_machine_type

@@ -1,4 +1,5 @@
 resource "google_compute_disk" "bastion" {
+  depends_on                = [google_project_service.compute]
   name                      = "${var.base_name}-bastion"
   zone                      = var.us_zone
   image                     = data.google_compute_image.ubuntu_2204.self_link
@@ -45,6 +46,7 @@ resource "google_compute_disk" "bastion" {
 }
 
 resource "google_compute_disk" "code" {
+  depends_on                = [google_project_service.compute]
   name                      = "${var.base_name}-code"
   zone                      = var.default_zone
   image                     = data.google_compute_image.debian_11.self_link
@@ -68,6 +70,7 @@ resource "google_compute_disk" "code" {
 }
 
 resource "google_compute_disk" "workstation" {
+  depends_on                = [google_project_service.compute]
   name                      = "${var.base_name}-workstation"
   zone                      = var.default_zone
   image                     = data.google_compute_image.debian_12.self_link

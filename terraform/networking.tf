@@ -13,15 +13,17 @@ data "google_compute_subnetwork" "default_us" {
 }
 
 resource "google_compute_router" "nat_router_esw1" {
-  name    = "nat-router-esw1"
-  network = data.google_compute_network.default.self_link
-  project = var.project_id
-  region  = var.default_region
+  depends_on = [google_project_service.compute]
+  name       = "nat-router-esw1"
+  network    = data.google_compute_network.default.self_link
+  project    = var.project_id
+  region     = var.default_region
 }
 
 resource "google_compute_router" "nat_router_us" {
-  name    = "nat-router"
-  network = data.google_compute_network.default.self_link
-  project = var.project_id
-  region  = var.us_region
+  depends_on = [google_project_service.compute]
+  name       = "nat-router"
+  network    = data.google_compute_network.default.self_link
+  project    = var.project_id
+  region     = var.us_region
 }
