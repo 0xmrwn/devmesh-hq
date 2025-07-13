@@ -23,6 +23,7 @@ apt-get -y install --no-install-recommends \
     apt-transport-https \
     sudo \
     openssl \
+    unzip \
     git \
     tree \
     jq \
@@ -75,6 +76,18 @@ sudo -u "$TARGET_USER" bash -c '
     # Verify installation
     echo "Node.js version: $(node -v)"
     echo "npm version: $(npm -v)"
+'
+
+# Install Bun
+sudo -u "$TARGET_USER" bash -c '
+    curl -fsSL https://bun.sh/install | bash
+    echo "Bun installed successfully."
+'
+
+# Install Rust
+sudo -u "$TARGET_USER" bash -c '
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    echo "Rust installed successfully."
 '
 
 # --- Tailscale Setup ---
