@@ -37,6 +37,23 @@ apt-get -y install --no-install-recommends \
 export HOME=/root
 curl -fsSL https://code-server.dev/install.sh | sh
 
+# --- Workspace scaffold + code-server CWD override ---
+WORKSPACE_DIR="/home/${TARGET_USER}/workspace"
+
+# 1.  Create language buckets (idempotent)
+mkdir -p "${WORKSPACE_DIR}"/{python,rust,js,data,notebooks,scratch,bin,projects}
+chown -R "${TARGET_USER}:${TARGET_USER}" "${WORKSPACE_DIR}"
+
+# 2.  Tell systemd to start code-server in that path
+mkdir -p /etc/systemd/system/code-server@${TARGET_USER}.service.d
+cat <<EOF >/etc/systemd/system/code-server@${TARGET_USER}.service.d/override.conf
+[Service]
+WorkingDirectory=${WORKSPACE_DIR}
+EOF
+# WorkingDirectory= sets the process CWD for the service and its children
+# (documented in systemd.exec(5)) :contentReference[oaicite:2]{index=2}
+systemctl daemon-reload   # reload unit files now that the drop-in exists
+
 # --- Development Tools Installation (as target user) ---
 # Install uv (Python package manager)
 sudo -u "$TARGET_USER" bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
