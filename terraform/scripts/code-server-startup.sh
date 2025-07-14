@@ -71,14 +71,15 @@ WORKSPACE_DIR="/home/${TARGET_USER}/workspace"
 mkdir -p "${WORKSPACE_DIR}"/{python,rust,js,data,notebooks,scratch,bin,projects}
 chown -R "${TARGET_USER}:${TARGET_USER}" "${WORKSPACE_DIR}"
 
-# 2.  Tell systemd to start code-server in that path
+# 2.  Tell systemd to start code-server in that path.
 mkdir -p /etc/systemd/system/code-server@${TARGET_USER}.service.d
 cat <<EOF >/etc/systemd/system/code-server@${TARGET_USER}.service.d/override.conf
 [Service]
 WorkingDirectory=${WORKSPACE_DIR}
+ExecStart=
+ExecStart=/usr/bin/code-server --config %h/.config/code-server/config.yaml ${WORKSPACE_DIR}
 EOF
-# WorkingDirectory= sets the process CWD for the service and its children
-# (documented in systemd.exec(5)) :contentReference[oaicite:2]{index=2}
+
 systemctl daemon-reload   # reload unit files now that the drop-in exists
 
 # --- Development Tools Installation (as target user) ---
