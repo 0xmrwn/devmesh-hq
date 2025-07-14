@@ -20,6 +20,8 @@ EXTENSIONS=(
     "timonwong.shellcheck"
     "bradlc.vscode-tailwindcss"
     "redhat.vscode-yaml"
+    "Google.geminicodeassist"
+    "saoudrizwan.claude-dev"
 )
 
 # Create standard devmesh user
@@ -55,14 +57,14 @@ setcap cap_net_bind_service=+ep /usr/bin/code-server
 
 # Pre-install extensions as target user (idempotent; code-server skips if already installed)
 echo "Pre-installing VSCode extensions..."
-sudo -u "$TARGET_USER" bash -c '
+sudo -u "$TARGET_USER" -H bash -s -- "${EXTENSIONS[@]}" <<'EOF'
   # Use OpenVSX gallery to avoid MS marketplace ToS issues
-  export EXTENSIONS_GALLERY='\''{"serviceUrl": "https://open-vsx.org/vscode/gallery"}'\''
+  export EXTENSIONS_GALLERY='{"serviceUrl": "https://open-vsx.org/vscode/gallery"}'
   for ext in "$@"; do
     echo "Installing extension: $ext"
     code-server --install-extension "$ext" || echo "Failed to install $ext, continuing..."
   done
-' _ "${EXTENSIONS[@]}"
+EOF
 
 # --- Workspace scaffold + code-server CWD override ---
 WORKSPACE_DIR="/home/${TARGET_USER}/workspace"
@@ -84,10 +86,10 @@ systemctl daemon-reload   # reload unit files now that the drop-in exists
 
 # --- Development Tools Installation (as target user) ---
 # Install uv (Python package manager)
-sudo -u "$TARGET_USER" bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+sudo -u "$TARGET_USER" -H bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
 
 # Install nvm and Node.js
-sudo -u "$TARGET_USER" bash -c '
+sudo -u "$TARGET_USER" -H bash <<'EOF'
     # Download and install nvm
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 
@@ -103,10 +105,10 @@ sudo -u "$TARGET_USER" bash -c '
     # Verify installation
     echo "Node.js version: $(node -v)"
     echo "npm version: $(npm -v)"
-'
+EOF
 
 # Install Bun
-sudo -u "$TARGET_USER" bash -c '
+sudo -u "$TARGET_USER" -H bash <<'EOF'
     curl -fsSL https://bun.sh/install | bash
 
     # Add bun to path for verification
@@ -116,10 +118,10 @@ sudo -u "$TARGET_USER" bash -c '
     # Verify installation
     echo "Bun installed successfully."
     echo "Bun version: $(bun -v)"
-'
+EOF
 
 # Install Rust
-sudo -u "$TARGET_USER" bash -c '
+sudo -u "$TARGET_USER" -H bash <<'EOF'
     # Install Rust non-interactively
     curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
@@ -130,7 +132,7 @@ sudo -u "$TARGET_USER" bash -c '
     echo "Rust installed successfully."
     echo "Rustc version: $(rustc --version)"
     echo "Cargo version: $(cargo --version)"
-'
+EOF
 
 # --- Tailscale Setup ---
 # Setup Tailscale connection using common function
