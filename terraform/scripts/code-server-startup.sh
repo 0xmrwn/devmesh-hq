@@ -6,9 +6,23 @@ set -euo pipefail
 
 # Configuration
 TARGET_USER="devmesh"
-CODE_SERVER_PORT="8443"
+CODE_SERVER_PORT="443"
 TAILSCALE_HOSTNAME="devmesh-code"
 TAILSCALE_TAGS="tag:code"
+EXTENSIONS=(
+    "ms-python.python"
+    "anysphere.pyright"
+    "mikestead.dotenv"
+    "tamasfe.even-better-toml"
+    "eamodio.gitlens"
+    "ms-vscode.makefile-tools"
+    "charliermarsh.ruff"
+    "timonwong.shellcheck"
+    "bradlc.vscode-tailwindcss"
+    "redhat.vscode-yaml"
+    "Google.geminicodeassist"
+    "saoudrizwan.claude-dev"
+)
 
 # Create standard devmesh user
 create_devmesh_user
@@ -38,6 +52,20 @@ apt-get -y install --no-install-recommends \
 export HOME=/root
 curl -fsSL https://code-server.dev/install.sh | sh
 
+# Allow code-server to bind to privileged port 443 without root
+setcap cap_net_bind_service=+ep /usr/bin/code-server
+
+# Pre-install extensions as target user (idempotent; code-server skips if already installed)
+echo "Pre-installing VSCode extensions..."
+sudo -u "$TARGET_USER" -H bash -s -- "${EXTENSIONS[@]}" <<'EOF'
+  # Use OpenVSX gallery to avoid MS marketplace ToS issues
+  export EXTENSIONS_GALLERY='{"serviceUrl": "https://open-vsx.org/vscode/gallery"}'
+  for ext in "$@"; do
+    echo "Installing extension: $ext"
+    code-server --install-extension "$ext" || echo "Failed to install $ext, continuing..."
+  done
+EOF
+
 # --- Workspace scaffold + code-server CWD override ---
 WORKSPACE_DIR="/home/${TARGET_USER}/workspace"
 
@@ -45,22 +73,23 @@ WORKSPACE_DIR="/home/${TARGET_USER}/workspace"
 mkdir -p "${WORKSPACE_DIR}"/{python,rust,js,data,notebooks,scratch,bin,projects}
 chown -R "${TARGET_USER}:${TARGET_USER}" "${WORKSPACE_DIR}"
 
-# 2.  Tell systemd to start code-server in that path
+# 2.  Tell systemd to start code-server in that path.
 mkdir -p /etc/systemd/system/code-server@${TARGET_USER}.service.d
 cat <<EOF >/etc/systemd/system/code-server@${TARGET_USER}.service.d/override.conf
 [Service]
 WorkingDirectory=${WORKSPACE_DIR}
+ExecStart=
+ExecStart=/usr/bin/code-server --config %h/.config/code-server/config.yaml ${WORKSPACE_DIR}
 EOF
-# WorkingDirectory= sets the process CWD for the service and its children
-# (documented in systemd.exec(5)) :contentReference[oaicite:2]{index=2}
+
 systemctl daemon-reload   # reload unit files now that the drop-in exists
 
 # --- Development Tools Installation (as target user) ---
 # Install uv (Python package manager)
-sudo -u "$TARGET_USER" bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+sudo -u "$TARGET_USER" -H bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
 
 # Install nvm and Node.js
-sudo -u "$TARGET_USER" bash -c '
+sudo -u "$TARGET_USER" -H bash <<'EOF'
     # Download and install nvm
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 
@@ -76,10 +105,10 @@ sudo -u "$TARGET_USER" bash -c '
     # Verify installation
     echo "Node.js version: $(node -v)"
     echo "npm version: $(npm -v)"
-'
+EOF
 
 # Install Bun
-sudo -u "$TARGET_USER" bash -c '
+sudo -u "$TARGET_USER" -H bash <<'EOF'
     curl -fsSL https://bun.sh/install | bash
 
     # Add bun to path for verification
@@ -89,10 +118,10 @@ sudo -u "$TARGET_USER" bash -c '
     # Verify installation
     echo "Bun installed successfully."
     echo "Bun version: $(bun -v)"
-'
+EOF
 
 # Install Rust
-sudo -u "$TARGET_USER" bash -c '
+sudo -u "$TARGET_USER" -H bash <<'EOF'
     # Install Rust non-interactively
     curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
@@ -103,7 +132,7 @@ sudo -u "$TARGET_USER" bash -c '
     echo "Rust installed successfully."
     echo "Rustc version: $(rustc --version)"
     echo "Cargo version: $(cargo --version)"
-'
+EOF
 
 # --- Tailscale Setup ---
 # Setup Tailscale connection using common function
@@ -174,6 +203,7 @@ auth: password
 password: ${CODE_SERVER_PASSWORD}
 cert: ${CERT_FILE}
 cert-key: ${KEY_FILE}
+skip-auth-preflight: true
 EOF
 
 # Set correct ownership
