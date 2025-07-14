@@ -13,17 +13,19 @@ data "google_compute_subnetwork" "default_us" {
 }
 
 resource "google_compute_router" "nat_router_esw1" {
-  depends_on = [google_project_service.compute]
-  name       = "nat-router-esw1"
-  network    = data.google_compute_network.default.self_link
-  project    = var.project_id
-  region     = var.default_region
+  depends_on  = [google_project_service.compute]
+  name        = "nat-router-esw1"
+  network     = data.google_compute_network.default.self_link
+  project     = var.project_id
+  region      = var.default_region
+  description = "NAT Router for code and workstation instances. Managed by Terraform."
 }
 
 resource "google_compute_router" "nat_router_us" {
-  depends_on = [google_project_service.compute]
-  name       = "nat-router"
-  network    = data.google_compute_network.default.self_link
-  project    = var.project_id
-  region     = var.us_region
+  depends_on  = [google_project_service.compute]
+  name        = "nat-router"
+  network     = data.google_compute_network.default.self_link
+  project     = var.project_id
+  region      = var.us_region
+  description = "NAT Router for bastion instance. Managed by Terraform."
 }

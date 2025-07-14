@@ -8,10 +8,10 @@ resource "google_compute_disk" "bastion" {
   size                      = var.bastion_disk_size
   type                      = var.default_disk_types["bastion"]
 
-  labels = {
+  labels = merge(local.standard_labels, {
+    component        = "bastion"
     dependency_group = random_pet.global_version.id
-  }
-
+  })
 }
 
 resource "google_compute_disk" "code" {
@@ -24,10 +24,10 @@ resource "google_compute_disk" "code" {
   size                      = var.code_disk_size
   type                      = var.default_disk_types["code"]
 
-  labels = {
+  labels = merge(local.standard_labels, {
+    component        = "code"
     dependency_group = random_pet.global_version.id
-  }
-
+  })
 }
 
 resource "google_compute_disk" "workstation" {
@@ -40,8 +40,8 @@ resource "google_compute_disk" "workstation" {
   size                      = var.workstation_disk_size
   type                      = var.default_disk_types["workstation"]
 
-  labels = {
+  labels = merge(local.standard_labels, {
+    component        = "workstation"
     dependency_group = random_pet.global_version.id
-  }
-
+  })
 }

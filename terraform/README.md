@@ -79,6 +79,8 @@ No modules.
 | <a name="input_default_region"></a> [default\_region](#input\_default\_region) | Default GCP region where resources are managed | `string` | `"europe-southwest1"` | no |
 | <a name="input_default_zone"></a> [default\_zone](#input\_default\_zone) | Default GCP zone where resources are managed | `string` | `"europe-southwest1-b"` | no |
 | <a name="input_deployer_sa_name"></a> [deployer\_sa\_name](#input\_deployer\_sa\_name) | Email of the service account to impersonate | `string` | `"devmesh-infra-admin"` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Deployment environment for resources | `string` | `"dev"` | no |
+| <a name="input_owner"></a> [owner](#input\_owner) | Owner of the deployed resources | `string` | `"devmesh-team"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project ID where resources are managed | `string` | n/a | yes |
 | <a name="input_tailscale_api_key"></a> [tailscale\_api\_key](#input\_tailscale\_api\_key) | API key for authenticating with Tailscale API | `string` | n/a | yes |
 | <a name="input_tailscale_secret_id"></a> [tailscale\_secret\_id](#input\_tailscale\_secret\_id) | Tailscale secret ID | `string` | `"TAILSCALE_AUTHKEY"` | no |
