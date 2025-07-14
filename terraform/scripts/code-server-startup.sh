@@ -177,6 +177,7 @@ auth: password
 password: ${CODE_SERVER_PASSWORD}
 cert: ${CERT_FILE}
 cert-key: ${KEY_FILE}
+skip-auth-preflight: true
 EOF
 
 # Set correct ownership
