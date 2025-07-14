@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Configuration
 TARGET_USER="devmesh"
-CODE_SERVER_PORT="8443"
+CODE_SERVER_PORT="443"
 TAILSCALE_HOSTNAME="devmesh-code"
 TAILSCALE_TAGS="tag:code"
 
@@ -37,6 +37,9 @@ apt-get -y install --no-install-recommends \
 # Install code-server
 export HOME=/root
 curl -fsSL https://code-server.dev/install.sh | sh
+
+# Allow code-server to bind to privileged port 443 without root
+setcap cap_net_bind_service=+ep /usr/bin/code-server
 
 # --- Workspace scaffold + code-server CWD override ---
 WORKSPACE_DIR="/home/${TARGET_USER}/workspace"

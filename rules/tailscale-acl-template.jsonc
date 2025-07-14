@@ -57,7 +57,7 @@
       ],
       "ip": [
         "tcp:22",
-        "tcp:8443"
+        "tcp:443"
       ]
     },
     {
@@ -131,12 +131,12 @@
         "tag:workstation:3389"
       ]
     },
-    // 2. bastion must reach code on 8443
+    // 2. bastion must reach code on 443
     {
       "src": "tag:bastion",
       "proto": "tcp",
       "accept": [
-        "tag:code:8443"
+        "tag:code:443"
       ]
     },
     // 3. guardrail: no public Internet reachability
