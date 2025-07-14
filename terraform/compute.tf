@@ -18,6 +18,7 @@ resource "google_compute_instance" "bastion" {
   zone                = var.us_zone
   machine_type        = var.bastion_machine_type
   deletion_protection = false
+  tags                = ["allow-tailscale-udp", "dev-instance"]
 
   boot_disk {
     source      = google_compute_disk.bastion.self_link
@@ -46,9 +47,10 @@ resource "google_compute_instance" "bastion" {
     enable_vtpm                 = true
   }
 
-  labels = {
+  labels = merge(local.standard_labels, {
+    component        = "bastion"
     dependency_group = random_pet.global_version.id
-  }
+  })
 }
 
 resource "google_compute_instance" "code" {
@@ -56,17 +58,18 @@ resource "google_compute_instance" "code" {
   name         = "${var.base_name}-code"
   zone         = var.default_zone
   machine_type = var.code_machine_type
-  tags         = ["allow-tailscale-udp"]
+  tags         = ["allow-tailscale-udp", "dev-instance"]
 
   boot_disk {
     source      = google_compute_disk.code.self_link
     auto_delete = false
   }
 
-  labels = {
+  labels = merge(local.standard_labels, {
+    component             = "code"
     goog-ops-agent-policy = "v2-x86-template-1-4-0"
     dependency_group      = random_pet.global_version.id
-  }
+  })
 
   metadata = {
     enable-osconfig = "TRUE"
@@ -97,7 +100,7 @@ resource "google_compute_instance" "workstation" {
   name         = "${var.base_name}-workstation"
   zone         = var.default_zone
   machine_type = var.workstation_machine_type
-  tags         = ["allow-tailscale-udp"]
+  tags         = ["allow-tailscale-udp", "dev-instance"]
 
   boot_disk {
     source      = google_compute_disk.workstation.self_link
@@ -126,8 +129,9 @@ resource "google_compute_instance" "workstation" {
     enable_vtpm                 = true
   }
 
-  labels = {
+  labels = merge(local.standard_labels, {
+    component        = "workstation"
     dependency_group = random_pet.global_version.id
-  }
+  })
 
 }

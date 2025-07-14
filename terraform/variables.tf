@@ -135,3 +135,19 @@ variable "tailscale_secret_id" {
   description = "Tailscale secret ID"
   default     = "TAILSCALE_AUTHKEY"
 }
+
+# -----------------------------------------------------------
+# Tagging variables
+# -----------------------------------------------------------
+
+variable "environment" {
+  type        = string
+  description = "Deployment environment for resources"
+  default     = "dev"
+}
+
+variable "owner" {
+  type        = string
+  description = "Owner of the deployed resources"
+  default     = "devmesh-team"
+}
