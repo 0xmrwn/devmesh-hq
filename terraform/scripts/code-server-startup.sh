@@ -9,6 +9,18 @@ TARGET_USER="devmesh"
 CODE_SERVER_PORT="443"
 TAILSCALE_HOSTNAME="devmesh-code"
 TAILSCALE_TAGS="tag:code"
+EXTENSIONS=(
+    "ms-python.python"
+    "anysphere.pyright"
+    "mikestead.dotenv"
+    "tamasfe.even-better-toml"
+    "eamodio.gitlens"
+    "ms-vscode.makefile-tools"
+    "charliermarsh.ruff"
+    "timonwong.shellcheck"
+    "bradlc.vscode-tailwindcss"
+    "redhat.vscode-yaml"
+)
 
 # Create standard devmesh user
 create_devmesh_user
@@ -40,6 +52,17 @@ curl -fsSL https://code-server.dev/install.sh | sh
 
 # Allow code-server to bind to privileged port 443 without root
 setcap cap_net_bind_service=+ep /usr/bin/code-server
+
+# Pre-install extensions as target user (idempotent; code-server skips if already installed)
+echo "Pre-installing VSCode extensions..."
+sudo -u "$TARGET_USER" bash -c '
+  # Use OpenVSX gallery to avoid MS marketplace ToS issues
+  export EXTENSIONS_GALLERY='\''{"serviceUrl": "https://open-vsx.org/vscode/gallery"}'\''
+  for ext in "$@"; do
+    echo "Installing extension: $ext"
+    code-server --install-extension "$ext" || echo "Failed to install $ext, continuing..."
+  done
+' _ "${EXTENSIONS[@]}"
 
 # --- Workspace scaffold + code-server CWD override ---
 WORKSPACE_DIR="/home/${TARGET_USER}/workspace"
