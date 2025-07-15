@@ -137,6 +137,48 @@ variable "tailscale_secret_id" {
 }
 
 # -----------------------------------------------------------
+# Firecrawl variables
+# -----------------------------------------------------------
+
+variable "firecrawl_scaling" {
+  type = object({
+    max_instance_request_concurrency = number
+    min_instance_count               = number
+    max_instance_count               = number
+  })
+  description = "Scaling configuration for Firecrawl Cloud Run service"
+  default = {
+    max_instance_request_concurrency = 5
+    min_instance_count               = 0
+    max_instance_count               = 2
+  }
+}
+
+variable "firecrawl_container_images" {
+  type        = map(string)
+  description = "Mapping of Firecrawl Cloud Run container names to their images"
+  default = {
+    api       = "trieve/firecrawl:v0.0.46"
+    worker    = "trieve/firecrawl:v0.0.46"
+    puppeteer = "trieve/puppeteer-service-ts:v0.0.6"
+    redis     = "redis:alpine"
+  }
+}
+
+variable "firecrawl_container_ports" {
+  type        = map(number)
+  description = "Mapping of Firecrawl Cloud Run container names to their exposed ports"
+  default = {
+    api       = 3002
+    worker    = 0 # worker does not expose a port
+    puppeteer = 3000
+    redis     = 6379
+  }
+}
+
+
+
+# -----------------------------------------------------------
 # Tagging variables
 # -----------------------------------------------------------
 

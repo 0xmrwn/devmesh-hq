@@ -24,6 +24,7 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [google_cloud_run_v2_service.firecrawl](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service) | resource |
 | [google_compute_disk.bastion](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk) | resource |
 | [google_compute_disk.code](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk) | resource |
 | [google_compute_disk.workstation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk) | resource |
@@ -80,6 +81,9 @@ No modules.
 | <a name="input_default_zone"></a> [default\_zone](#input\_default\_zone) | Default GCP zone where resources are managed | `string` | `"europe-southwest1-b"` | no |
 | <a name="input_deployer_sa_name"></a> [deployer\_sa\_name](#input\_deployer\_sa\_name) | Email of the service account to impersonate | `string` | `"devmesh-infra-admin"` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Deployment environment for resources | `string` | `"dev"` | no |
+| <a name="input_firecrawl_container_images"></a> [firecrawl\_container\_images](#input\_firecrawl\_container\_images) | Mapping of Firecrawl Cloud Run container names to their images | `map(string)` | <pre>{<br>  "api": "trieve/firecrawl:v0.0.46",<br>  "puppeteer": "trieve/puppeteer-service-ts:v0.0.6",<br>  "redis": "redis:alpine",<br>  "worker": "trieve/firecrawl:v0.0.46"<br>}</pre> | no |
+| <a name="input_firecrawl_container_ports"></a> [firecrawl\_container\_ports](#input\_firecrawl\_container\_ports) | Mapping of Firecrawl Cloud Run container names to their exposed ports | `map(number)` | <pre>{<br>  "api": 3002,<br>  "puppeteer": 3000,<br>  "redis": 6379,<br>  "worker": 0<br>}</pre> | no |
+| <a name="input_firecrawl_scaling"></a> [firecrawl\_scaling](#input\_firecrawl\_scaling) | Scaling configuration for Firecrawl Cloud Run service | <pre>object({<br>    max_instance_request_concurrency = number<br>    min_instance_count               = number<br>    max_instance_count               = number<br>  })</pre> | <pre>{<br>  "max_instance_count": 2,<br>  "max_instance_request_concurrency": 5,<br>  "min_instance_count": 0<br>}</pre> | no |
 | <a name="input_owner"></a> [owner](#input\_owner) | Owner of the deployed resources | `string` | `"devmesh-team"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project ID where resources are managed | `string` | n/a | yes |
 | <a name="input_tailscale_api_key"></a> [tailscale\_api\_key](#input\_tailscale\_api\_key) | API key for authenticating with Tailscale API | `string` | n/a | yes |
