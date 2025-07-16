@@ -9,6 +9,7 @@ TARGET_USER="devmesh"
 CODE_SERVER_PORT="443"
 TAILSCALE_HOSTNAME="devmesh-code"
 TAILSCALE_TAGS="tag:code"
+TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
 EXTENSIONS=(
     "ms-python.python"
     "anysphere.pyright"
@@ -74,7 +75,7 @@ sudo -u "$TARGET_USER" -H bash -s -- "${EXTENSIONS[@]}" <<'EOF'
 EOF
 
 # --- Workspace scaffold + code-server CWD override ---
-WORKSPACE_DIR="/home/${TARGET_USER}/workspace"
+WORKSPACE_DIR="${TARGET_HOME}/workspace"
 
 # 1.  Create language buckets (idempotent)
 mkdir -p "${WORKSPACE_DIR}"/{python,rust,js,data,notebooks,scratch,bin,projects}
@@ -86,7 +87,7 @@ cat <<EOF >/etc/systemd/system/code-server@${TARGET_USER}.service.d/override.con
 [Service]
 WorkingDirectory=${WORKSPACE_DIR}
 ExecStart=
-ExecStart=/usr/bin/code-server --config /home/${TARGET_USER}/.config/code-server/config.yaml ${WORKSPACE_DIR}
+ExecStart=/usr/bin/code-server --config ${TARGET_HOME}/.config/code-server/config.yaml ${WORKSPACE_DIR}
 EOF
 
 systemctl daemon-reload   # reload unit files now that the drop-in exists
@@ -164,16 +165,16 @@ if [ -z "${TAILNET_NAME}" ]; then
 fi
 
 # --- Code-Server Configuration & Certificate Setup ---
-USER_CONFIG_DIR="/home/${TARGET_USER}/.config/code-server"
+USER_CONFIG_DIR="${TARGET_HOME}/.config/code-server"
 USER_CERT_DIR="${USER_CONFIG_DIR}/certs"
 CERT_FILE="${USER_CERT_DIR}/codeserver.crt"
 KEY_FILE="${USER_CERT_DIR}/codeserver.key"
-PASSWORD_FILE="/home/${TARGET_USER}/code-server-password.txt"
+PASSWORD_FILE="${TARGET_HOME}/code-server-password.txt"
 CERT_DOMAIN="${TAILSCALE_HOSTNAME}.${TAILNET_NAME}"
 
 # Create necessary directories
 mkdir -p "${USER_CERT_DIR}"
-chown -R "${TARGET_USER}:${TARGET_USER}" "/home/${TARGET_USER}/.config"
+chown -R "${TARGET_USER}:${TARGET_USER}" "${TARGET_HOME}/.config"
 
 # Idempotent password generation
 if [ -f "$PASSWORD_FILE" ]; then
