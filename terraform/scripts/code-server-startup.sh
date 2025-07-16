@@ -53,7 +53,14 @@ export HOME=/root
 curl -fsSL https://code-server.dev/install.sh | sh
 
 # Allow code-server to bind to privileged port 443 without root
-setcap cap_net_bind_service=+ep /usr/bin/code-server
+# The capability must be applied to the Node.js binary, not the wrapper script.
+if [ -f /usr/lib/code-server/lib/node ]; then
+  setcap cap_net_bind_service=+ep /usr/lib/code-server/lib/node
+else
+  echo "WARNING: code-server node binary not found. Binding to port 443 may fail." >&2
+  # Fallback to old method just in case the path changes in a future version.
+  setcap cap_net_bind_service=+ep /usr/bin/code-server
+fi
 
 # Pre-install extensions as target user (idempotent; code-server skips if already installed)
 echo "Pre-installing VSCode extensions..."
@@ -79,7 +86,7 @@ cat <<EOF >/etc/systemd/system/code-server@${TARGET_USER}.service.d/override.con
 [Service]
 WorkingDirectory=${WORKSPACE_DIR}
 ExecStart=
-ExecStart=/usr/bin/code-server --config %h/.config/code-server/config.yaml ${WORKSPACE_DIR}
+ExecStart=/usr/bin/code-server --config /home/${TARGET_USER}/.config/code-server/config.yaml ${WORKSPACE_DIR}
 EOF
 
 systemctl daemon-reload   # reload unit files now that the drop-in exists
@@ -224,4 +231,4 @@ ufw --force enable
 # --- Final Status ---
 log_info "Code-server setup complete!"
 log_info "Code-server accessible at: https://${CERT_DOMAIN}:${CODE_SERVER_PORT}"
-log_info "Password: ${CODE_SERVER_PASSWORD}"
+log_info "Password file: ${PASSWORD_FILE}"
