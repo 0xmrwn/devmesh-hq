@@ -163,6 +163,11 @@ variable "firecrawl_container_images" {
     puppeteer = "trieve/puppeteer-service-ts:v0.0.6"
     redis     = "redis:alpine"
   }
+  # Resource limits (see cloud-run.tf):
+  # api: 0.5 vCPU / 512MiB
+  # worker: 0.5 vCPU / 512MiB
+  # puppeteer: 1 vCPU / 1GiB
+  # redis: 0.25 vCPU / 256MiB
 }
 
 variable "firecrawl_container_ports" {
@@ -176,7 +181,57 @@ variable "firecrawl_container_ports" {
   }
 }
 
+# -----------------------------------------------------------
+# Firecrawl container resource variables
+# -----------------------------------------------------------
 
+variable "firecrawl_api_resources" {
+  type = object({
+    cpu    = string
+    memory = string
+  })
+  description = "Resource limits for Firecrawl API container"
+  default = {
+    cpu    = "0.5"
+    memory = "512Mi"
+  }
+}
+
+variable "firecrawl_worker_resources" {
+  type = object({
+    cpu    = string
+    memory = string
+  })
+  description = "Resource limits for Firecrawl worker container"
+  default = {
+    cpu    = "0.5"
+    memory = "512Mi"
+  }
+}
+
+variable "firecrawl_puppeteer_resources" {
+  type = object({
+    cpu    = string
+    memory = string
+  })
+  description = "Resource limits for Firecrawl puppeteer container"
+  default = {
+    cpu    = "1"
+    memory = "1Gi"
+  }
+}
+
+variable "firecrawl_redis_resources" {
+  type = object({
+    cpu    = string
+    memory = string
+  })
+  description = "Resource limits for Firecrawl redis container"
+  default = {
+    cpu    = "0.25"
+    memory = "256Mi"
+  }
+}
 
 # -----------------------------------------------------------
 # Tagging variables

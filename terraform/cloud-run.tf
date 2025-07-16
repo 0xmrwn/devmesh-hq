@@ -47,8 +47,8 @@ resource "google_cloud_run_v2_service" "firecrawl" {
 
       resources {
         limits = {
-          cpu    = "0.25"
-          memory = "256Mi"
+          cpu    = var.firecrawl_api_resources.cpu
+          memory = var.firecrawl_api_resources.memory
         }
       }
 
@@ -76,8 +76,8 @@ resource "google_cloud_run_v2_service" "firecrawl" {
 
       resources {
         limits = {
-          cpu    = "0.25"
-          memory = "256Mi"
+          cpu    = var.firecrawl_worker_resources.cpu
+          memory = var.firecrawl_worker_resources.memory
         }
       }
       depends_on = ["redis", "puppeteer", "api"]
@@ -103,8 +103,8 @@ resource "google_cloud_run_v2_service" "firecrawl" {
 
       resources {
         limits = {
-          cpu    = "0.5"
-          memory = "512Mi"
+          cpu    = var.firecrawl_puppeteer_resources.cpu
+          memory = var.firecrawl_puppeteer_resources.memory
         }
       }
     }
@@ -113,7 +113,7 @@ resource "google_cloud_run_v2_service" "firecrawl" {
     containers {
       name    = "redis"
       image   = var.firecrawl_container_images["redis"]
-      command = ["redis-server", "--bind", "0.0.0.0"]
+      command = ["redis-server", "--bind", "0.0.0.0", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
 
       ports {
         container_port = var.firecrawl_container_ports["redis"]
@@ -121,8 +121,8 @@ resource "google_cloud_run_v2_service" "firecrawl" {
 
       resources {
         limits = {
-          cpu    = "0.05"
-          memory = "128Mi"
+          cpu    = var.firecrawl_redis_resources.cpu
+          memory = var.firecrawl_redis_resources.memory
         }
       }
     }
