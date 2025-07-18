@@ -20,6 +20,11 @@ resource "google_cloud_run_v2_service" "firecrawl" {
       image   = var.firecrawl_container_images["api"]
       command = ["pnpm", "run", "start:production"]
 
+      env {
+        name  = "HOST"
+        value = "0.0.0.0"
+      }
+
       ports {
         container_port = var.firecrawl_container_ports["api"]
       }
@@ -40,9 +45,20 @@ resource "google_cloud_run_v2_service" "firecrawl" {
         name  = "PLAYWRIGHT_MICROSERVICE_URL"
         value = "http://localhost:${var.firecrawl_container_ports["puppeteer"]}"
       }
+
       env {
-        name  = "TEST_API_KEY"
-        value = "fc-${random_password.firecrawl_api_key.result}"
+        name  = "MAX_RAM"
+        value = "0.95"
+      }
+
+      env {
+        name  = "MAX_CPU"
+        value = "0.95"
+      }
+
+      env {
+        name  = "NUM_WORKERS_PER_QUEUE"
+        value = "2"
       }
 
       resources {
@@ -62,6 +78,15 @@ resource "google_cloud_run_v2_service" "firecrawl" {
       command = ["pnpm", "run", "workers"]
 
       env {
+        name  = "HOST"
+        value = "0.0.0.0"
+      }
+
+      env {
+        name  = "PORT"
+        value = var.firecrawl_container_ports["worker"]
+      }
+      env {
         name  = "REDIS_URL"
         value = "redis://localhost:${var.firecrawl_container_ports["redis"]}"
       }
@@ -72,6 +97,21 @@ resource "google_cloud_run_v2_service" "firecrawl" {
       env {
         name  = "PLAYWRIGHT_MICROSERVICE_URL"
         value = "http://localhost:${var.firecrawl_container_ports["puppeteer"]}"
+      }
+
+      env {
+        name  = "MAX_RAM"
+        value = "0.95"
+      }
+
+      env {
+        name  = "MAX_CPU"
+        value = "0.95"
+      }
+
+      env {
+        name  = "NUM_WORKERS_PER_QUEUE"
+        value = "2"
       }
 
       resources {

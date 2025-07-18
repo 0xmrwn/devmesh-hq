@@ -163,11 +163,6 @@ variable "firecrawl_container_images" {
     puppeteer = "trieve/puppeteer-service-ts:v0.0.6"
     redis     = "redis:alpine"
   }
-  # Resource limits (see cloud-run.tf):
-  # api: 0.5 vCPU / 512MiB
-  # worker: 0.5 vCPU / 512MiB
-  # puppeteer: 1 vCPU / 1GiB
-  # redis: 0.25 vCPU / 256MiB
 }
 
 variable "firecrawl_container_ports" {
@@ -229,7 +224,7 @@ variable "firecrawl_redis_resources" {
   description = "Resource limits for Firecrawl redis container"
   default = {
     cpu    = "0.25"
-    memory = "256Mi"
+    memory = "512Mi"
   }
 }
 
