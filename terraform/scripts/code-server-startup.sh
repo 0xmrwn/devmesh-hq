@@ -9,6 +9,7 @@ TARGET_USER="devmesh"
 CODE_SERVER_PORT="443"
 TAILSCALE_HOSTNAME="devmesh-code"
 TAILSCALE_TAGS="tag:code"
+TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
 EXTENSIONS=(
     "ms-python.python"
     "anysphere.pyright"
@@ -53,7 +54,14 @@ export HOME=/root
 curl -fsSL https://code-server.dev/install.sh | sh
 
 # Allow code-server to bind to privileged port 443 without root
-setcap cap_net_bind_service=+ep /usr/bin/code-server
+# The capability must be applied to the Node.js binary, not the wrapper script.
+if [ -f /usr/lib/code-server/lib/node ]; then
+  setcap cap_net_bind_service=+ep /usr/lib/code-server/lib/node
+else
+  echo "WARNING: code-server node binary not found. Binding to port 443 may fail." >&2
+  # Fallback to old method just in case the path changes in a future version.
+  setcap cap_net_bind_service=+ep /usr/bin/code-server
+fi
 
 # Pre-install extensions as target user (idempotent; code-server skips if already installed)
 echo "Pre-installing VSCode extensions..."
@@ -67,7 +75,7 @@ sudo -u "$TARGET_USER" -H bash -s -- "${EXTENSIONS[@]}" <<'EOF'
 EOF
 
 # --- Workspace scaffold + code-server CWD override ---
-WORKSPACE_DIR="/home/${TARGET_USER}/workspace"
+WORKSPACE_DIR="${TARGET_HOME}/workspace"
 
 # 1.  Create language buckets (idempotent)
 mkdir -p "${WORKSPACE_DIR}"/{python,rust,js,data,notebooks,scratch,bin,projects}
@@ -79,7 +87,7 @@ cat <<EOF >/etc/systemd/system/code-server@${TARGET_USER}.service.d/override.con
 [Service]
 WorkingDirectory=${WORKSPACE_DIR}
 ExecStart=
-ExecStart=/usr/bin/code-server --config %h/.config/code-server/config.yaml ${WORKSPACE_DIR}
+ExecStart=/usr/bin/code-server --config ${TARGET_HOME}/.config/code-server/config.yaml ${WORKSPACE_DIR}
 EOF
 
 systemctl daemon-reload   # reload unit files now that the drop-in exists
@@ -157,16 +165,16 @@ if [ -z "${TAILNET_NAME}" ]; then
 fi
 
 # --- Code-Server Configuration & Certificate Setup ---
-USER_CONFIG_DIR="/home/${TARGET_USER}/.config/code-server"
+USER_CONFIG_DIR="${TARGET_HOME}/.config/code-server"
 USER_CERT_DIR="${USER_CONFIG_DIR}/certs"
 CERT_FILE="${USER_CERT_DIR}/codeserver.crt"
 KEY_FILE="${USER_CERT_DIR}/codeserver.key"
-PASSWORD_FILE="/home/${TARGET_USER}/code-server-password.txt"
+PASSWORD_FILE="${TARGET_HOME}/code-server-password.txt"
 CERT_DOMAIN="${TAILSCALE_HOSTNAME}.${TAILNET_NAME}"
 
 # Create necessary directories
 mkdir -p "${USER_CERT_DIR}"
-chown -R "${TARGET_USER}:${TARGET_USER}" "/home/${TARGET_USER}/.config"
+chown -R "${TARGET_USER}:${TARGET_USER}" "${TARGET_HOME}/.config"
 
 # Idempotent password generation
 if [ -f "$PASSWORD_FILE" ]; then
@@ -224,4 +232,4 @@ ufw --force enable
 # --- Final Status ---
 log_info "Code-server setup complete!"
 log_info "Code-server accessible at: https://${CERT_DOMAIN}:${CODE_SERVER_PORT}"
-log_info "Password: ${CODE_SERVER_PASSWORD}"
+log_info "Password file: ${PASSWORD_FILE}"
