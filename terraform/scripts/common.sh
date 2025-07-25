@@ -32,6 +32,12 @@ setup_tailscale() {
   AUTH_KEY=$(gcloud secrets versions access latest --secret=TAILSCALE_AUTHKEY --format='get(payload.data)' | base64 -d)
 
   tailscale up --auth-key="$AUTH_KEY" --ssh --hostname="$hostname" --advertise-tags="$tags"
+
+  # Verify Tailscale connection was established
+  if ! tailscale status | grep -q "$hostname"; then
+    log_error "Tailscale connection verification failed"
+    exit 1
+  fi
 }
 
 # --- Oh‑My‑Zsh -------------------------------------------------------------
