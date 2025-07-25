@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# DevMesh Code Server startup script
-# Uses common functions for standardized setup
+# --------- Guard against re‑runs ------------------------------------------
+if systemctl is-active --quiet code-server@devmesh; then
+  log_info "code-server already running - skipping bootstrap"
+  exit 0
+fi
 
-# Configuration
+# --------- Configuration ---------------------------------------------------
 TARGET_USER="devmesh"
 CODE_SERVER_PORT="443"
 TAILSCALE_HOSTNAME="devmesh-code"
 TAILSCALE_TAGS="tag:code"
-TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
 EXTENSIONS=(
     "ms-python.python"
     "anysphere.pyright"
@@ -25,15 +27,14 @@ EXTENSIONS=(
     "saoudrizwan.claude-dev"
 )
 
-# Create standard devmesh user
-create_devmesh_user
+# --------- 0. Disable unattended-upgrades during first boot ----------------
+systemctl stop unattended-upgrades.service || true
+systemctl mask unattended-upgrades.service || true
 
-# --- Installation ---
-# Wait for APT locks before proceeding
-wait_for_apt_lock
-
-apt-get update
-apt-get -y install --no-install-recommends \
+# --------- 1. Base system packages (single apt txn) -----------------------
+apt-get -o DPkg::Lock::Timeout=600 update && \
+apt-get -o DPkg::Lock::Timeout=600 -y upgrade && \
+apt-get -o DPkg::Lock::Timeout=600 -y install --no-install-recommends \
     curl \
     apt-transport-https \
     sudo \
@@ -41,6 +42,7 @@ apt-get -y install --no-install-recommends \
     unzip \
     git \
     tree \
+    zsh \
     jq \
     nano \
     libncursesw5-dev \
@@ -48,23 +50,67 @@ apt-get -y install --no-install-recommends \
     autoconf \
     automake \
     build-essential
+apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install code-server
-export HOME=/root
-curl -fsSL https://code-server.dev/install.sh | sh
 
-# Allow code-server to bind to privileged port 443 without root
-# The capability must be applied to the Node.js binary, not the wrapper script.
-if [ -f /usr/lib/code-server/lib/node ]; then
-  setcap cap_net_bind_service=+ep /usr/lib/code-server/lib/node
-else
-  echo "WARNING: code-server node binary not found. Binding to port 443 may fail." >&2
-  # Fallback to old method just in case the path changes in a future version.
-  setcap cap_net_bind_service=+ep /usr/bin/code-server
+# --------- 2. User & shell -------------------------------------------------
+create_devmesh_user true
+TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
+install_oh_my_zsh "$TARGET_USER"
+
+# --------- 3. Networking first: Tailscale ---------------------------------
+setup_tailscale "$TAILSCALE_HOSTNAME" "$TAILSCALE_TAGS"
+
+# --------- 4. Dev-toolchains (grouped) ------------------------------------
+sudo -u "$TARGET_USER" bash <<'DEVTOOLS'
+set -euo pipefail
+
+# Python (uv)
+curl -LsSf https://astral.sh/uv/install.sh -o /tmp/uv.sh && bash /tmp/uv.sh
+
+# NodeJS via nvm
+if [ ! -d "$HOME/.nvm" ]; then
+  curl -Lo /tmp/nvm.tar.gz https://github.com/nvm-sh/nvm/archive/v0.40.3.tar.gz
+  tar -C /tmp -xf /tmp/nvm.tar.gz
+  mkdir -p "$HOME/.nvm"
+  cp -r /tmp/nvm-0.40.3/* "$HOME/.nvm/"
+fi
+export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"
+nvm install --lts
+nvm alias default 'lts/*'
+
+# Bun
+if [ ! -d "$HOME/.bun" ]; then
+  curl -fsSL https://bun.sh/install -o /tmp/bun.sh && bash /tmp/bun.sh
 fi
 
-# Pre-install extensions as target user (idempotent; code-server skips if already installed)
-echo "Pre-installing VSCode extensions..."
+# Rust via rustup
+if ! command -v rustc &>/dev/null; then
+  curl --proto '=https' --tlsv1.2 -sSf https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init \
+       -o /tmp/rustup && chmod +x /tmp/rustup && /tmp/rustup -y
+fi
+
+# npm packages
+npm install -g @google/gemini-cli @anthropic-ai/claude-code
+DEVTOOLS
+
+# --------- 5. code-server --------------------------------------------------
+export HOME=/root
+curl -fsSL https://code-server.dev/install.sh -o /tmp/cs.sh && bash /tmp/cs.sh
+
+# --- systemd drop-in: working dir + bind to :443 with AmbientCapabilities --
+mkdir -p /etc/systemd/system/code-server@${TARGET_USER}.service.d
+cat >/etc/systemd/system/code-server@${TARGET_USER}.service.d/override.conf <<EOF
+[Service]
+WorkingDirectory=${TARGET_HOME}/workspace
+ExecStart=
+ExecStart=/usr/bin/code-server --config ${TARGET_HOME}/.config/code-server/config.yaml ${TARGET_HOME}/workspace
+AmbientCapabilities=CAP_NET_BIND_SERVICE   # :contentReference[oaicite:7]{index=7}
+EOF
+systemctl daemon-reload
+
+# Pre-install extensions as target user
+log_info "Pre-installing VSCode extensions..."
 sudo -u "$TARGET_USER" -H bash -s -- "${EXTENSIONS[@]}" <<'EOF'
   # Use OpenVSX gallery to avoid MS marketplace ToS issues
   export EXTENSIONS_GALLERY='{"serviceUrl": "https://open-vsx.org/vscode/gallery"}'
@@ -74,162 +120,53 @@ sudo -u "$TARGET_USER" -H bash -s -- "${EXTENSIONS[@]}" <<'EOF'
   done
 EOF
 
-# --- Workspace scaffold + code-server CWD override ---
-WORKSPACE_DIR="${TARGET_HOME}/workspace"
+# Workspace buckets
+sudo -u "$TARGET_USER" mkdir -p "${TARGET_HOME}"/workspace/{python,rust,js,data,notebooks,scratch,bin,projects}
 
-# 1.  Create language buckets (idempotent)
-mkdir -p "${WORKSPACE_DIR}"/{python,rust,js,data,notebooks,scratch,bin,projects}
-chown -R "${TARGET_USER}:${TARGET_USER}" "${WORKSPACE_DIR}"
-
-# 2.  Tell systemd to start code-server in that path.
-mkdir -p /etc/systemd/system/code-server@${TARGET_USER}.service.d
-cat <<EOF >/etc/systemd/system/code-server@${TARGET_USER}.service.d/override.conf
-[Service]
-WorkingDirectory=${WORKSPACE_DIR}
-ExecStart=
-ExecStart=/usr/bin/code-server --config ${TARGET_HOME}/.config/code-server/config.yaml ${WORKSPACE_DIR}
-EOF
-
-systemctl daemon-reload   # reload unit files now that the drop-in exists
-
-# --- Development Tools Installation (as target user) ---
-# Install uv (Python package manager)
-sudo -u "$TARGET_USER" -H bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
-
-# Install nvm and Node.js
-sudo -u "$TARGET_USER" -H bash <<'EOF'
-    # Download and install nvm
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-
-    # Source nvm and install Node.js
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-    # Install Node.js
-    nvm install 23
-    nvm use 23
-    nvm alias default 23
-
-    # Verify installation
-    echo "Node.js version: $(node -v)"
-    echo "npm version: $(npm -v)"
-EOF
-
-# Install Bun
-sudo -u "$TARGET_USER" -H bash <<'EOF'
-    curl -fsSL https://bun.sh/install | bash
-
-    # Add bun to path for verification
-    export BUN_INSTALL="$HOME/.bun"
-    export PATH="$BUN_INSTALL/bin:$PATH"
-
-    # Verify installation
-    echo "Bun installed successfully."
-    echo "Bun version: $(bun -v)"
-EOF
-
-# Install Rust
-sudo -u "$TARGET_USER" -H bash <<'EOF'
-    # Install Rust non-interactively
-    curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-
-    # Source cargo environment to make rustc and cargo available
-    source "$HOME/.cargo/env"
-
-    # Verify installation
-    echo "Rust installed successfully."
-    echo "Rustc version: $(rustc --version)"
-    echo "Cargo version: $(cargo --version)"
-EOF
-
-# --- Tailscale Setup ---
-# Setup Tailscale connection using common function
-setup_tailscale "$TAILSCALE_HOSTNAME" "$TAILSCALE_TAGS"
-
-# Wait for Tailscale to be fully up and get its domain
-log_info "Waiting for Tailscale to initialize..."
-TAILNET_NAME=""
-for i in {1..10}; do
-    TAILNET_NAME=$(tailscale status --json | jq -r '.MagicDNSSuffix')
-    if [ -n "${TAILNET_NAME}" ]; then
-        log_info "Tailscale is up. Tailnet: ${TAILNET_NAME}"
-        break
-    fi
+# --------- 6. TLS via tailscale cert --------------------------------------
+# --- 3.1 Tailnet readiness (insert before cert step) ----------------------
+TAILNET=""
+for _ in {1..10}; do
+  TAILNET=$(tailscale status --json | jq -r '.MagicDNSSuffix')
+  if [ -n "$TAILNET" ]; then
+    break
+  else
     sleep 2
+  fi
 done
+[ -z "$TAILNET" ] && { log_error "MagicDNS still not ready"; exit 1; }
 
-if [ -z "${TAILNET_NAME}" ]; then
-    log_error "Could not determine Tailnet name after 20 seconds."
-    tailscale status
-    exit 1
+CERT_DOMAIN="${TAILSCALE_HOSTNAME}.${TAILNET}"
+USER_CERT_DIR="${TARGET_HOME}/.config/code-server/certs"
+mkdir -p "$USER_CERT_DIR"
+tailscale cert --cert-file "${USER_CERT_DIR}/codeserver.crt" \
+               --key-file  "${USER_CERT_DIR}/codeserver.key" "$CERT_DOMAIN"
+
+# --- 3.3 Secure password file --------------------------------------------
+PASSFILE="${TARGET_HOME}/code-server-password.txt"
+if [ ! -f "$PASSFILE" ]; then
+  openssl rand -base64 32 >"$PASSFILE"
 fi
+chown "${TARGET_USER}:${TARGET_USER}" "$PASSFILE"
+chmod 600 "$PASSFILE"
 
-# --- Code-Server Configuration & Certificate Setup ---
-USER_CONFIG_DIR="${TARGET_HOME}/.config/code-server"
-USER_CERT_DIR="${USER_CONFIG_DIR}/certs"
-CERT_FILE="${USER_CERT_DIR}/codeserver.crt"
-KEY_FILE="${USER_CERT_DIR}/codeserver.key"
-PASSWORD_FILE="${TARGET_HOME}/code-server-password.txt"
-CERT_DOMAIN="${TAILSCALE_HOSTNAME}.${TAILNET_NAME}"
-
-# Create necessary directories
-mkdir -p "${USER_CERT_DIR}"
-chown -R "${TARGET_USER}:${TARGET_USER}" "${TARGET_HOME}/.config"
-
-# Idempotent password generation
-if [ -f "$PASSWORD_FILE" ]; then
-    CODE_SERVER_PASSWORD=$(awk '{print $NF}' "$PASSWORD_FILE")
-    log_info "Re-using existing code-server password."
-else
-    log_info "Generating new code-server password."
-    CODE_SERVER_PASSWORD=$(openssl rand -base64 32)
-    echo "Code-server password: ${CODE_SERVER_PASSWORD}" > "$PASSWORD_FILE"
-    chown "${TARGET_USER}:${TARGET_USER}" "$PASSWORD_FILE"
-    chmod 600 "$PASSWORD_FILE"
-fi
-
-# Obtain certificate directly into the user's directory with retries
-log_info "Waiting for MagicDNS and obtaining certificate for ${CERT_DOMAIN}..."
-for i in {1..5}; do
-    if tailscale cert --cert-file "${CERT_FILE}" --key-file "${KEY_FILE}" "${CERT_DOMAIN}"; then
-        log_info "Certificate obtained successfully."
-        break
-    fi
-    log_info "Attempt $i/5 failed. Retrying in 5 seconds..."
-    sleep 5
-done
-
-if [ ! -f "${CERT_FILE}" ]; then
-    log_error "Could not obtain Tailscale certificate after multiple retries."
-    exit 1
-fi
-
-# Create configuration
-cat << EOF > "${USER_CONFIG_DIR}/config.yaml"
+# code-server YAML
+sudo -u "$TARGET_USER" mkdir -p "${TARGET_HOME}/.config/code-server"
+cat >"${TARGET_HOME}/.config/code-server/config.yaml" <<EOF
 bind-addr: 0.0.0.0:${CODE_SERVER_PORT}
 auth: password
 password: ${CODE_SERVER_PASSWORD}
-cert: ${CERT_FILE}
-cert-key: ${KEY_FILE}
+cert: ${USER_CERT_DIR}/codeserver.crt
+cert-key: ${USER_CERT_DIR}/codeserver.key
 skip-auth-preflight: true
 EOF
+chown -R "${TARGET_USER}:${TARGET_USER}" "${TARGET_HOME}/.config"
 
-# Set correct ownership
-chown -R "${TARGET_USER}:${TARGET_USER}" "${USER_CONFIG_DIR}"
-
-# --- Service Setup ---
-# Enable and start code-server service
+# --------- 7. Enable service & wrap-up ------------------------------------
 systemctl enable --now "code-server@${TARGET_USER}"
+log_info "code-server ready at https://${CERT_DOMAIN}:${CODE_SERVER_PORT}"
+log_info "Password stored in ${PASSFILE}"
 
-# --- Firewall Setup ---
-# Wait for APT locks before installing ufw
-wait_for_apt_lock
-
-apt-get -y install ufw
-ufw allow ${CODE_SERVER_PORT}/tcp
-ufw --force enable
-
-# --- Final Status ---
-log_info "Code-server setup complete!"
-log_info "Code-server accessible at: https://${CERT_DOMAIN}:${CODE_SERVER_PORT}"
-log_info "Password file: ${PASSWORD_FILE}"
+# --- 8. Re‑enable unattended‑upgrades at the very end --------------------
+systemctl unmask unattended-upgrades.service
+systemctl start unattended-upgrades.service
