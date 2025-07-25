@@ -150,7 +150,8 @@ fi
 chown "${TARGET_USER}:${TARGET_USER}" "$PASSFILE"
 chmod 600 "$PASSFILE"
 
-# code-server YAML
+# Read password from file
+CODE_SERVER_PASSWORD=$(cat "$PASSFILE")
 sudo -u "$TARGET_USER" mkdir -p "${TARGET_HOME}/.config/code-server"
 cat >"${TARGET_HOME}/.config/code-server/config.yaml" <<EOF
 bind-addr: 0.0.0.0:${CODE_SERVER_PORT}
