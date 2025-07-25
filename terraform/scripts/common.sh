@@ -43,8 +43,10 @@ setup_tailscale() {
 # --- Oh‑My‑Zsh -------------------------------------------------------------
 install_oh_my_zsh() {
   local user="$1"
+  local user_home
+  user_home=$(getent passwd "$user" | cut -d: -f6)
   sudo -u "$user" curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
        -o /tmp/omz.sh && sudo -u "$user" sh /tmp/omz.sh --unattended
   chsh -s "$(command -v zsh)" "$user"
-  sudo -u "$user" sed -i 's/^ZSH_THEME=.*/ZSH_THEME="gnzh"/' "$(/usr/bin/getent passwd "$user" | cut -d: -f6)/.zshrc"
+  sudo -u "$user" sed -i 's/^ZSH_THEME=.*/ZSH_THEME="gnzh"/' "${user_home}/.zshrc"
 }
