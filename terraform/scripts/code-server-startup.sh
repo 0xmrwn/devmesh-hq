@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# --------- Guard against re‑runs ------------------------------------------
-if systemctl is-active --quiet code-server@devmesh; then
-  log_info "code-server already running - skipping bootstrap"
-  exit 0
-fi
-
 # --------- Configuration ---------------------------------------------------
 TARGET_USER="devmesh"
 CODE_SERVER_PORT="443"
@@ -124,7 +118,8 @@ EOF
 sudo -u "$TARGET_USER" mkdir -p "${TARGET_HOME}"/workspace/{python,rust,js,data,notebooks,scratch,bin,projects}
 
 # --------- 6. TLS via tailscale cert --------------------------------------
-# --- 3.1 Tailnet readiness (insert before cert step) ----------------------
+
+# Tailnet readiness
 TAILNET=""
 for _ in {1..10}; do
   TAILNET=$(tailscale status --json | jq -r '.MagicDNSSuffix')
@@ -142,7 +137,8 @@ mkdir -p "$USER_CERT_DIR"
 tailscale cert --cert-file "${USER_CERT_DIR}/codeserver.crt" \
                --key-file  "${USER_CERT_DIR}/codeserver.key" "$CERT_DOMAIN"
 
-# --- 3.3 Secure password file --------------------------------------------
+
+# --------- 7. code-server config ------------------------------------------
 PASSFILE="${TARGET_HOME}/code-server-password.txt"
 if [ ! -f "$PASSFILE" ]; then
   openssl rand -base64 32 >"$PASSFILE"
@@ -163,11 +159,11 @@ skip-auth-preflight: true
 EOF
 chown -R "${TARGET_USER}:${TARGET_USER}" "${TARGET_HOME}/.config"
 
-# --------- 7. Enable service & wrap-up ------------------------------------
+# --------- 8. Enable service & wrap-up ------------------------------------
 systemctl enable --now "code-server@${TARGET_USER}"
 log_info "code-server ready at https://${CERT_DOMAIN}:${CODE_SERVER_PORT}"
 log_info "Password stored in ${PASSFILE}"
 
-# --- 8. Re‑enable unattended‑upgrades at the very end --------------------
+# --------- 9. Re‑enable unattended‑upgrades at the very end ---------------
 systemctl unmask unattended-upgrades.service
 systemctl start unattended-upgrades.service
