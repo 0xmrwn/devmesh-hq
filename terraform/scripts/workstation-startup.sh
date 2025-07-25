@@ -11,12 +11,15 @@ TAILSCALE_TAGS="tag:workstation"
 # Create standard devmesh user
 create_devmesh_user
 
-# Wait for APT locks before package installation
-wait_for_apt_lock
-
 # Minimal GUI + helpers
-apt-get update
-apt-get -y install --no-install-recommends xfce4 xterm dbus-x11 curl apt-utils
+apt-get -o DPkg::Lock::Timeout=600 update && \
+apt-get -o DPkg::Lock::Timeout=600 -y upgrade && \
+apt-get -o DPkg::Lock::Timeout=600 -y install --no-install-recommends \
+    xfce4 \
+    xterm \
+    dbus-x11 \
+    curl \
+    apt-utils
 
 # Chrome Remote Desktop
 log_info "Installing Chrome Remote Desktop"
@@ -25,8 +28,8 @@ curl -sSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor --ba
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/google-chrome.gpg] \
   http://dl.google.com/linux/chrome-remote-desktop/deb stable main" \
   >/etc/apt/sources.list.d/chrome-remote-desktop.list
-apt-get update
-apt-get -y install chrome-remote-desktop
+apt-get -o DPkg::Lock::Timeout=600 -y install chrome-remote-desktop
+apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Configure Chrome Remote Desktop session
 log_info "Configuring Chrome Remote Desktop session"
