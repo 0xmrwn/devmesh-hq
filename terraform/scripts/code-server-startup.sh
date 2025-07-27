@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eEuo pipefail
+
+
 
 # --------- Configuration ---------------------------------------------------
 TARGET_USER="devmesh"
@@ -25,7 +27,16 @@ EXTENSIONS=(
 systemctl stop unattended-upgrades.service || true
 systemctl mask unattended-upgrades.service || true
 
+# --------- 0‑bis. Remove EOL backports if present --------------------------
+if grep -Rq 'bullseye-backports' /etc/apt/sources.list*; then
+  log_info "Pruning obsolete bullseye-backports repo"
+  sed -i '/bullseye-backports/d' /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+fi
+
 # --------- 1. Base system packages (single apt txn) -----------------------
+systemctl stop apt-daily.timer apt-daily-upgrade.timer || true
+systemctl kill --kill-whom=all apt-daily.service apt-daily-upgrade.service || true
+
 apt-get -o DPkg::Lock::Timeout=600 update && \
 apt-get -o DPkg::Lock::Timeout=600 -y upgrade && \
 apt-get -o DPkg::Lock::Timeout=600 -y install --no-install-recommends \
@@ -51,13 +62,16 @@ apt-get clean && rm -rf /var/lib/apt/lists/*
 create_devmesh_user true
 TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
 install_oh_my_zsh "$TARGET_USER"
+export TARGET_HOME
 
 # --------- 3. Networking first: Tailscale ---------------------------------
 setup_tailscale "$TAILSCALE_HOSTNAME" "$TAILSCALE_TAGS"
 
 # --------- 4. Dev-toolchains (grouped) ------------------------------------
-sudo -u "$TARGET_USER" bash <<'DEVTOOLS'
+sudo --preserve-env=TARGET_HOME -u devmesh -H bash <<'DEVTOOLS'
+
 set -euo pipefail
+export HOME="$TARGET_HOME"
 
 # Python (uv)
 curl -LsSf https://astral.sh/uv/install.sh -o /tmp/uv.sh && bash /tmp/uv.sh
@@ -78,10 +92,17 @@ if [ ! -d "$HOME/.bun" ]; then
   curl -fsSL https://bun.sh/install -o /tmp/bun.sh && bash /tmp/bun.sh
 fi
 
-# Rust via rustup
-if ! command -v rustc &>/dev/null; then
-  curl --proto '=https' --tlsv1.2 -sSf https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init \
-       -o /tmp/rustup && chmod +x /tmp/rustup && /tmp/rustup -y
+# Rust via rustup (idempotent, non-interactive)
+if ! command -v rustc >/dev/null 2>&1; then
+  bash <<'RUSTUP'
+    set -euo pipefail
+    # Skip PATH checks (avoids a second interactive prompt)
+    export RUSTUP_INIT_SKIP_PATH_CHECK=yes
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+      | sh -s -- -y --profile minimal --component rustfmt,clippy   # -y is the key
+    . "$HOME/.cargo/env"
+    echo "Rust $(rustc -V) and Cargo $(cargo -V) installed."
+RUSTUP
 fi
 
 # npm packages
