@@ -56,9 +56,9 @@ No modules.
 | [tailscale_dns_preferences.magic_dns](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/dns_preferences) | resource |
 | [tailscale_tailnet_key.nodes_auth_key](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key) | resource |
 | [tailscale_tailnet_settings.tailnet_settings](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_settings) | resource |
-| [google_compute_image.debian_11](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
-| [google_compute_image.debian_12](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
-| [google_compute_image.ubuntu_2204](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
+| [google_compute_image.bastion](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
+| [google_compute_image.code](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
+| [google_compute_image.workstation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
 | [google_compute_network.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
 | [google_compute_subnetwork.default_esw1](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetwork) | data source |
 | [google_compute_subnetwork.default_us](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetwork) | data source |
@@ -72,8 +72,6 @@ No modules.
 | <a name="input_bastion_machine_type"></a> [bastion\_machine\_type](#input\_bastion\_machine\_type) | Machine type for the bastion instance | `string` | `"e2-micro"` | no |
 | <a name="input_code_disk_size"></a> [code\_disk\_size](#input\_code\_disk\_size) | Size for the code disk | `number` | `50` | no |
 | <a name="input_code_machine_type"></a> [code\_machine\_type](#input\_code\_machine\_type) | Machine type for the code server instance | `string` | `"e2-medium"` | no |
-| <a name="input_debian_11_version"></a> [debian\_11\_version](#input\_debian\_11\_version) | Debian 11 image version | `string` | `"debian-11-bullseye-v20250610"` | no |
-| <a name="input_debian_12_version"></a> [debian\_12\_version](#input\_debian\_12\_version) | Debian 12 image version | `string` | `"debian-12-bookworm-v20250610"` | no |
 | <a name="input_default_block_size_bytes"></a> [default\_block\_size\_bytes](#input\_default\_block\_size\_bytes) | Default block size for the disks | `number` | `4096` | no |
 | <a name="input_default_disk_types"></a> [default\_disk\_types](#input\_default\_disk\_types) | Default disk type for the disks | `map(string)` | <pre>{<br>  "bastion": "pd-standard",<br>  "code": "pd-balanced",<br>  "workstation": "pd-balanced"<br>}</pre> | no |
 | <a name="input_default_region"></a> [default\_region](#input\_default\_region) | Default GCP region where resources are managed | `string` | `"europe-southwest1"` | no |
@@ -84,7 +82,6 @@ No modules.
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project ID where resources are managed | `string` | n/a | yes |
 | <a name="input_tailscale_api_key"></a> [tailscale\_api\_key](#input\_tailscale\_api\_key) | API key for authenticating with Tailscale API | `string` | n/a | yes |
 | <a name="input_tailscale_secret_id"></a> [tailscale\_secret\_id](#input\_tailscale\_secret\_id) | Tailscale secret ID | `string` | `"TAILSCALE_AUTHKEY"` | no |
-| <a name="input_ubuntu_2204_version"></a> [ubuntu\_2204\_version](#input\_ubuntu\_2204\_version) | Ubuntu 22.04 image version | `string` | `"ubuntu-2204-jammy-v20250701"` | no |
 | <a name="input_us_region"></a> [us\_region](#input\_us\_region) | US GCP region where resources are managed | `string` | `"us-east1"` | no |
 | <a name="input_us_zone"></a> [us\_zone](#input\_us\_zone) | US GCP zone where resources are managed | `string` | `"us-east1-b"` | no |
 | <a name="input_workstation_disk_size"></a> [workstation\_disk\_size](#input\_workstation\_disk\_size) | Size for the workstation disk | `number` | `50` | no |

@@ -70,24 +70,6 @@ variable "workstation_machine_type" {
   default     = "e2-standard-2"
 }
 
-variable "ubuntu_2204_version" {
-  type        = string
-  description = "Ubuntu 22.04 image version"
-  default     = "ubuntu-2204-jammy-v20250701"
-}
-
-variable "debian_11_version" {
-  type        = string
-  description = "Debian 11 image version"
-  default     = "debian-11-bullseye-v20250610"
-}
-
-variable "debian_12_version" {
-  type        = string
-  description = "Debian 12 image version"
-  default     = "debian-12-bookworm-v20250610"
-}
-
 # -----------------------------------------------------------
 # Compute Storage variables
 # -----------------------------------------------------------
