@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
 
-
-
 # --------- Configuration ---------------------------------------------------
 TARGET_USER="devmesh"
 CODE_SERVER_PORT="443"
@@ -188,3 +186,4 @@ log_info "Password stored in ${PASSFILE}"
 # --------- 9. Re‑enable unattended‑upgrades at the very end ---------------
 systemctl unmask unattended-upgrades.service
 systemctl start unattended-upgrades.service
+systemctl enable --now apt-daily.timer apt-daily-upgrade.timer
