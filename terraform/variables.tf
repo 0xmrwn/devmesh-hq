@@ -124,6 +124,18 @@ variable "github_ssh_key_secret_id" {
   default     = "GITHUB_SSH_KEY"
 }
 
+variable "gemini_api_key_secret_id" {
+  type        = string
+  description = "Gemini API key secret ID"
+  default     = "GEMINI_API_KEY"
+}
+
+variable "groq_api_key_secret_id" {
+  type        = string
+  description = "Groq API key secret ID"
+  default     = "GROQ_API_KEY"
+}
+
 # -----------------------------------------------------------
 # Tagging variables
 # -----------------------------------------------------------
