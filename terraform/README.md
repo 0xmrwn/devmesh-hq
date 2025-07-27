@@ -46,6 +46,7 @@ No modules.
 | [google_project_service.osconfig](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_project_service.oslogin](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_project_service.secret_manager](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
+| [google_secret_manager_secret.github_ssh_key](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret) | resource |
 | [google_secret_manager_secret.tailscale_authkey](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret) | resource |
 | [google_secret_manager_secret_version.tailscale_authkey](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret_version) | resource |
 | [google_service_account.bastion_sa](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
@@ -78,6 +79,7 @@ No modules.
 | <a name="input_default_zone"></a> [default\_zone](#input\_default\_zone) | Default GCP zone where resources are managed | `string` | `"europe-southwest1-b"` | no |
 | <a name="input_deployer_sa_name"></a> [deployer\_sa\_name](#input\_deployer\_sa\_name) | Email of the service account to impersonate | `string` | `"devmesh-infra-admin"` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Deployment environment for resources | `string` | `"dev"` | no |
+| <a name="input_github_ssh_key_secret_id"></a> [github\_ssh\_key\_secret\_id](#input\_github\_ssh\_key\_secret\_id) | GitHub SSH key secret ID | `string` | `"GITHUB_SSH_KEY"` | no |
 | <a name="input_owner"></a> [owner](#input\_owner) | Owner of the deployed resources | `string` | `"devmesh-team"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project ID where resources are managed | `string` | n/a | yes |
 | <a name="input_tailscale_api_key"></a> [tailscale\_api\_key](#input\_tailscale\_api\_key) | API key for authenticating with Tailscale API | `string` | n/a | yes |

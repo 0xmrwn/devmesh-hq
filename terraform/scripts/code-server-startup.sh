@@ -62,6 +62,9 @@ TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
 install_oh_my_zsh "$TARGET_USER"
 export TARGET_HOME
 
+# --------- 2.5. GitHub SSH Key Setup --------------------------------------
+configure_github_ssh "GITHUB_SSH_KEY" "$TARGET_USER"
+
 # --------- 3. Networking first: Tailscale ---------------------------------
 setup_tailscale "$TAILSCALE_HOSTNAME" "$TAILSCALE_TAGS"
 

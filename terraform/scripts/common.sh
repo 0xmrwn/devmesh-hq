@@ -67,3 +67,53 @@ install_oh_my_zsh() {
   chsh -s "$(command -v zsh)" "$user"
   sudo -u "$user" sed -i 's/^ZSH_THEME=.*/ZSH_THEME="gnzh"/' "${user_home}/.zshrc"
 }
+
+# --- GitHub SSH Key Setup -------------------------------------------------
+configure_github_ssh() {
+  local secret_name="${1:-GITHUB_SSH_KEY}"
+  local user="${2:-devmesh}"
+  local user_home
+
+  # get home directory for the target user
+  if ! user_home=$(getent passwd "$user" | cut -d: -f6); then
+    log_error "User '$user' not found; cannot configure GitHub SSH."
+    return 1
+  fi
+
+  # attempt to fetch the base64‑encoded private key
+  local key_b64
+  if ! key_b64=$(gcloud secrets versions access latest --secret="$secret_name" \
+                    --format='get(payload.data)' 2>/dev/null); then
+    log_info "Secret '$secret_name' not found or inaccessible; skipping GitHub SSH setup."
+    return 0
+  fi
+
+  log_info "Configuring GitHub SSH key for user '$user' from secret '$secret_name'."
+
+  # prepare .ssh directory
+  mkdir -p "$user_home/.ssh"
+  chmod 700 "$user_home/.ssh"
+  chown "$user:$user" "$user_home/.ssh"
+
+  # decode and write the private key
+  echo "$key_b64" | base64 -d > "$user_home/.ssh/id_rsa"
+  chmod 600 "$user_home/.ssh/id_rsa"
+  chown "$user:$user" "$user_home/.ssh/id_rsa"
+
+  # add GitHub to known_hosts to avoid interactive prompt
+  ssh-keyscan github.com >> "$user_home/.ssh/known_hosts"
+  chmod 644 "$user_home/.ssh/known_hosts"
+  chown "$user:$user" "$user_home/.ssh/known_hosts"
+
+  # create SSH config to use this key for GitHub
+  cat > "$user_home/.ssh/config" <<EOF
+Host github.com
+  HostName github.com
+  IdentityFile $user_home/.ssh/id_rsa
+  IdentitiesOnly yes
+EOF
+  chmod 644 "$user_home/.ssh/config"
+  chown "$user:$user" "$user_home/.ssh/config"
+
+  log_info "GitHub SSH key configured for '$user'."
+}

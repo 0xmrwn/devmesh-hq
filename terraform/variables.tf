@@ -118,6 +118,12 @@ variable "tailscale_secret_id" {
   default     = "TAILSCALE_AUTHKEY"
 }
 
+variable "github_ssh_key_secret_id" {
+  type        = string
+  description = "GitHub SSH key secret ID"
+  default     = "GITHUB_SSH_KEY"
+}
+
 # -----------------------------------------------------------
 # Tagging variables
 # -----------------------------------------------------------
