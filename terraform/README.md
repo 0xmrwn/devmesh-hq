@@ -55,10 +55,7 @@ No modules.
 | [google_service_account.code_sa](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [google_service_account.workstation_sa](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [random_pet.global_version](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/pet) | resource |
-| [tailscale_acl.as_json](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/acl) | resource |
-| [tailscale_dns_preferences.magic_dns](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/dns_preferences) | resource |
 | [tailscale_tailnet_key.nodes_auth_key](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key) | resource |
-| [tailscale_tailnet_settings.tailnet_settings](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_settings) | resource |
 | [google_compute_image.bastion](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
 | [google_compute_image.code](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
 | [google_compute_image.workstation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_image) | data source |
