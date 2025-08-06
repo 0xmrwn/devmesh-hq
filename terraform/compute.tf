@@ -1,18 +1,3 @@
-data "google_compute_image" "ubuntu_2204" {
-  project = "ubuntu-os-cloud"
-  filter  = "name = ${var.ubuntu_2204_version}"
-}
-
-data "google_compute_image" "debian_11" {
-  project = "debian-cloud"
-  filter  = "name = ${var.debian_11_version}"
-}
-
-data "google_compute_image" "debian_12" {
-  project = "debian-cloud"
-  filter  = "name = ${var.debian_12_version}"
-}
-
 resource "google_compute_instance" "bastion" {
   name                = "${var.base_name}-bastion"
   zone                = var.us_zone

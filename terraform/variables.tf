@@ -70,24 +70,6 @@ variable "workstation_machine_type" {
   default     = "e2-standard-2"
 }
 
-variable "ubuntu_2204_version" {
-  type        = string
-  description = "Ubuntu 22.04 image version"
-  default     = "ubuntu-2204-jammy-v20250701"
-}
-
-variable "debian_11_version" {
-  type        = string
-  description = "Debian 11 image version"
-  default     = "debian-11-bullseye-v20250610"
-}
-
-variable "debian_12_version" {
-  type        = string
-  description = "Debian 12 image version"
-  default     = "debian-12-bookworm-v20250610"
-}
-
 # -----------------------------------------------------------
 # Compute Storage variables
 # -----------------------------------------------------------
@@ -134,6 +116,24 @@ variable "tailscale_secret_id" {
   type        = string
   description = "Tailscale secret ID"
   default     = "TAILSCALE_AUTHKEY"
+}
+
+variable "github_ssh_key_secret_id" {
+  type        = string
+  description = "GitHub SSH key secret ID"
+  default     = "GITHUB_SSH_KEY"
+}
+
+variable "gemini_api_key_secret_id" {
+  type        = string
+  description = "Gemini API key secret ID"
+  default     = "GEMINI_API_KEY"
+}
+
+variable "groq_api_key_secret_id" {
+  type        = string
+  description = "Groq API key secret ID"
+  default     = "GROQ_API_KEY"
 }
 
 # -----------------------------------------------------------

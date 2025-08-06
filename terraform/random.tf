@@ -1,8 +1,8 @@
 resource "random_pet" "global_version" {
   keepers = {
-    bastion_image     = var.ubuntu_2204_version
-    code_image        = var.debian_11_version
-    workstation_image = var.debian_12_version
+    bastion_image     = data.google_compute_image.bastion.family
+    code_image        = data.google_compute_image.code.family
+    workstation_image = data.google_compute_image.workstation.family
     zone              = var.default_zone
   }
 }
